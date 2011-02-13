@@ -1,0 +1,18 @@
+ctrl_interface=/var/run
+ap_scan=2
+update_config=1
+
+network={
+        ssid="yaelb"
+        proto=WPA
+        key_mgmt=WPA-EAP
+        pairwise=TKIP
+        group=TKIP
+        eap=TLS
+        identity="test"
+        ca_path="/wlan"
+        ca_cert="/wlan/dotnet_root.cer"
+        client_cert="/wlan/dotnet_personal_test.cer"
+        private_key="/wlan/dotnet_personal_test.pem"
+        private_key_passwd="test"
+}		

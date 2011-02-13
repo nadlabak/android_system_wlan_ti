@@ -1,0 +1,3600 @@
+diff -Naur hostapd-0.6.9/hostapd/.config hostapd/hostapd/.config
+--- hostapd-0.6.9/hostapd/.config	1970-01-01 02:00:00.000000000 +0200
++++ hostapd/hostapd/.config	2010-02-23 14:39:26.000074000 +0200
+@@ -0,0 +1,148 @@
++# Example hostapd build time configuration
++#
++# This file lists the configuration options that are used when building the
++# hostapd binary. All lines starting with # are ignored. Configuration option
++# lines must be commented out complete, if they are not to be included, i.e.,
++# just setting VARIABLE=n is not disabling that variable.
++#
++# This file is included in Makefile, so variables like CFLAGS and LIBS can also
++# be modified from here. In most cass, these lines should use += in order not
++# to override previous values of the variables.
++
++
++# Driver interface for WiLink AP driver
++CONFIG_DRIVER_WILINK=y
++
++# Driver interface for Host AP driver
++# CONFIG_DRIVER_HOSTAP=y
++
++# Driver interface for wired authenticator
++#CONFIG_DRIVER_WIRED=y
++
++# Driver interface for madwifi driver
++#CONFIG_DRIVER_MADWIFI=y
++#CFLAGS += -I../../madwifi # change to the madwifi source directory
++
++# Driver interface for Prism54 driver
++#CONFIG_DRIVER_PRISM54=y
++
++# Driver interface for drivers using the nl80211 kernel interface
++#CONFIG_DRIVER_NL80211=y
++# driver_nl80211.c requires a rather new libnl (version 1.1) which may not be
++# shipped with your distribution yet. If that is the case, you need to build
++# newer libnl version and point the hostapd build to use it.
++# LIBNL=../src/libnl
++# CFLAGS += -I$(LIBNL)/include
++# LIBS += -L$(LIBNL)/lib
++
++# Driver interface for FreeBSD net80211 layer (e.g., Atheros driver)
++#CONFIG_DRIVER_BSD=y
++#CFLAGS += -I/usr/local/include
++#LIBS += -L/usr/local/lib
++
++# Driver interface for no driver (e.g., RADIUS server only)
++#CONFIG_DRIVER_NONE=y
++
++# IEEE 802.11F/IAPP
++#CONFIG_IAPP=y
++
++# WPA2/IEEE 802.11i RSN pre-authentication
++#CONFIG_RSN_PREAUTH=y
++
++# PeerKey handshake for Station to Station Link (IEEE 802.11e DLS)
++#CONFIG_PEERKEY=y
++
++# IEEE 802.11w (management frame protection)
++# This version is an experimental implementation based on IEEE 802.11w/D1.0
++# draft and is subject to change since the standard has not yet been finalized.
++# Driver support is also needed for IEEE 802.11w.
++#CONFIG_IEEE80211W=y
++
++# Integrated EAP server
++CONFIG_EAP=y
++
++# EAP-MD5 for the integrated EAP server
++CONFIG_EAP_MD5=y
++
++# EAP-TLS for the integrated EAP server
++#CONFIG_EAP_TLS=y
++
++# EAP-MSCHAPv2 for the integrated EAP server
++#CONFIG_EAP_MSCHAPV2=y
++
++# EAP-PEAP for the integrated EAP server
++#CONFIG_EAP_PEAP=y
++
++# EAP-GTC for the integrated EAP server
++#CONFIG_EAP_GTC=y
++
++# EAP-TTLS for the integrated EAP server
++#CONFIG_EAP_TTLS=y
++
++# EAP-SIM for the integrated EAP server
++#CONFIG_EAP_SIM=y
++
++# EAP-AKA for the integrated EAP server
++#CONFIG_EAP_AKA=y
++
++# EAP-AKA' for the integrated EAP server
++# This requires CONFIG_EAP_AKA to be enabled, too.
++#CONFIG_EAP_AKA_PRIME=y
++
++# EAP-PAX for the integrated EAP server
++#CONFIG_EAP_PAX=y
++
++# EAP-PSK for the integrated EAP server (this is _not_ needed for WPA-PSK)
++#CONFIG_EAP_PSK=y
++
++# EAP-SAKE for the integrated EAP server
++#CONFIG_EAP_SAKE=y
++
++# EAP-GPSK for the integrated EAP server
++#CONFIG_EAP_GPSK=y
++# Include support for optional SHA256 cipher suite in EAP-GPSK
++#CONFIG_EAP_GPSK_SHA256=y
++
++# EAP-FAST for the integrated EAP server
++# Note: Default OpenSSL package does not include support for all the
++# functionality needed for EAP-FAST. If EAP-FAST is enabled with OpenSSL,
++# the OpenSSL library must be patched (openssl-0.9.9-session-ticket.patch)
++# to add the needed functions.
++#CONFIG_EAP_FAST=y
++
++# Wi-Fi Protected Setup (WPS)
++#CONFIG_WPS=y
++# Enable UPnP support for external WPS Registrars
++#CONFIG_WPS_UPNP=y
++
++# EAP-IKEv2
++#CONFIG_EAP_IKEV2=y
++
++# Trusted Network Connect (EAP-TNC)
++#CONFIG_EAP_TNC=y
++
++# PKCS#12 (PFX) support (used to read private key and certificate file from
++# a file that usually has extension .p12 or .pfx)
++#CONFIG_PKCS12=y
++
++# RADIUS authentication server. This provides access to the integrated EAP
++# server from external hosts using RADIUS.
++#CONFIG_RADIUS_SERVER=y
++
++# Build IPv6 support for RADIUS operations
++#CONFIG_IPV6=y
++
++# IEEE Std 802.11r-2008 (Fast BSS Transition)
++#CONFIG_IEEE80211R=y
++
++# Use the hostapd's IEEE 802.11 authentication (ACL), but without
++# the IEEE 802.11 Management capability (e.g., madwifi or FreeBSD/net80211)
++#CONFIG_DRIVER_RADIUS_ACL=y
++
++# IEEE 802.11n (High Throughput) support
++#CONFIG_IEEE80211N=y
++
++# Remove debugging code that is printing out debug messages to stdout.
++# This can be used to reduce the size of the hostapd considerably if debugging
++# code is not needed.
++#CONFIG_NO_STDOUT_DEBUG=y
+diff -Naur hostapd-0.6.9/hostapd/Makefile hostapd/hostapd/Makefile
+--- hostapd-0.6.9/hostapd/Makefile	2009-03-23 16:06:28.000000000 +0200
++++ hostapd/hostapd/Makefile	2010-02-23 14:39:26.000261000 +0200
+@@ -1,6 +1,9 @@
+-ifndef CC
+-CC=gcc
+-endif
++CC=$(CROSS_COMPILE)gcc
++
++HOSTAPD_LIB_CC=$(CROSS_COMPILE)ar
++HOSTAPD_LIB_PATH=../../output/libhostapd.a
++
++TI_HOSTAPD_LIB ?= y
+ 
+ ifndef CFLAGS
+ CFLAGS = -MMD -O2 -Wall -g
+@@ -105,6 +108,20 @@
+ OBJS += driver_hostap.o
+ endif
+ 
++ifdef CONFIG_DRIVER_WILINK
++CFLAGS += -DCONFIG_DRIVER_WILINK \
++	-I ../../../stad/Export_Inc \
++	-I ../../../utils \
++	-I ../../../platforms/os/linux/inc \
++	-I ../../../WiLink/stad/Export_Inc \
++	-I ../../../WiLink/utils \
++	-I ../../../WiLink/platforms/os/linux/inc
++
++CONFIG_L2_PACKET=y
++OBJS += regulatory.o
++OBJS += driver_wilink.o 
++endif
++
+ ifdef CONFIG_DRIVER_WIRED
+ CFLAGS += -DCONFIG_DRIVER_WIRED
+ OBJS += driver_wired.o
+@@ -538,7 +555,14 @@
+ CFLAGS += -DCONFIG_NO_AES_ENCRYPT_BLOCK
+ endif
+ 
++
++ifeq ($(TI_HOSTAPD_LIB), y)
++ALL=hostapd hostapd_cli_lib
++CFLAGS += -DTI_HOSTAPD_CLI_LIB
++else
+ ALL=hostapd hostapd_cli
++endif
++
+ 
+ all: verify_config $(ALL)
+ 
+@@ -555,11 +579,15 @@
+ 	for i in $(ALL); do cp $$i /usr/local/bin/$$i; done
+ 
+ hostapd: $(OBJS)
+-	$(CC) -o hostapd $(OBJS) $(LIBS)
++	$(CC) -o hostapd $(OBJS) --static $(LIBS)
+ 
+ OBJS_c = hostapd_cli.o ../src/common/wpa_ctrl.o ../src/utils/os_$(CONFIG_OS).o
+ hostapd_cli: $(OBJS_c)
+-	$(CC) -o hostapd_cli $(OBJS_c)
++	$(CC) -o hostapd_cli --static $(OBJS_c)
++
++hostapd_cli_lib: $(OBJS_c)
++	$(HOSTAPD_LIB_CC) rcs $(HOSTAPD_LIB_PATH) $(OBJS_c)
++
+ 
+ NOBJS = nt_password_hash.o ../src/crypto/ms_funcs.o ../src/crypto/sha1.o ../src/crypto/rc4.o ../src/crypto/md5.o
+ NOBJS += ../src/crypto/crypto_openssl.o ../src/utils/os_$(CONFIG_OS).o
+diff -Naur hostapd-0.6.9/hostapd/config.c hostapd/hostapd/config.c
+--- hostapd-0.6.9/hostapd/config.c	2009-03-23 16:06:28.000000000 +0200
++++ hostapd/hostapd/config.c	2010-02-23 14:39:26.000406000 +0200
+@@ -28,6 +28,12 @@
+ #include "uuid.h"
+ #include "eap_common/eap_wsc_common.h"
+ 
++#ifndef CONFIG_NO_TI
++#include "ieee802_11_auth.h"
++#include "common/ieee802_11_defs.h" 
++#include "sta_info.h"
++#include "eloop.h"
++#endif
+ 
+ #define MAX_STA_COUNT 2007
+ 
+@@ -1389,6 +1395,204 @@
+ #endif /* CONFIG_IEEE80211N */
+ 
+ 
++
++#ifndef CONFIG_NO_TI
++
++struct hapd_interfaces {
++	size_t count;
++	struct hostapd_iface **iface;
++};
++
++
++int hostapd_should_remove_station(struct hostapd_data *hapd,  const u8 *addr) {
++	wpa_printf(MSG_DEBUG, "HAPDTI %s: station - " MACSTR, __func__, MAC2STR(addr));
++	if (hostapd_maclist_found(hapd->conf->accept_mac,
++			hapd->conf->num_accept_mac, addr, NULL)) {
++		printf("choice 1\n");
++		return HOSTAPD_ACL_ACCEPT;
++	}
++
++	if (hostapd_maclist_found(hapd->conf->deny_mac,
++			hapd->conf->num_deny_mac, addr, NULL)) {
++		printf("choice 2\n");
++		return HOSTAPD_ACL_REJECT;
++	}
++
++	if (hapd->conf->macaddr_acl == ACCEPT_UNLESS_DENIED) {
++		printf("choice 3\n");
++		return HOSTAPD_ACL_ACCEPT;
++	}
++	if (hapd->conf->macaddr_acl == DENY_UNLESS_ACCEPTED) {
++		printf("choice 4\n");
++		return HOSTAPD_ACL_REJECT;
++	}
++
++	printf("choice 5\n");
++	return HOSTAPD_ACL_REJECT;
++}
++
++
++int hostapd_remove_invalid_station(struct hostapd_data *hapd,
++					       struct sta_info *sta,
++					       void *ctx)
++{
++	if (hostapd_should_remove_station(hapd, sta->addr) == HOSTAPD_ACL_REJECT) {
++		wpa_printf(MSG_DEBUG, "HAPDTI %s: removing sta " MACSTR " !!!\n", 
++				__func__, MAC2STR(sta->addr));
++				
++		hostapd_wpa_auth_disconnect(hapd, sta->addr, WLAN_REASON_UNSPECIFIED);
++		
++		/*hostapd_sta_disassoc(
++					hapd, sta->addr,
++					WLAN_REASON_UNSPECIFIED);
++		
++		sta->flags &= ~WLAN_STA_ASSOC;
++		ieee802_1x_notify_port_enabled(sta->eapol_sm, 0);
++		
++		accounting_sta_stop(hapd, sta);
++		ieee802_1x_free_station(sta);
++		hostapd_logger(hapd, sta->addr, HOSTAPD_MODULE_IEEE80211,
++		       HOSTAPD_LEVEL_INFO, "disassociated due to acl");
++		sta->timeout_next = STA_DEAUTH;
++
++		mlme_disassociate_indication(
++			hapd, sta, WLAN_REASON_UNSPECIFIED);
++
++		mlme_deauthenticate_indication(
++			hapd, sta,
++			WLAN_REASON_PREV_AUTH_NOT_VALID);
++
++		ap_free_sta(hapd, sta);*/
++	}
++	
++	return 0;
++}
++
++
++void hostapd_remove_invalid_stations(struct hostapd_data *bss) {
++	if (!bss) {
++		wpa_printf(MSG_DEBUG, "HAPDTI: bss is NULL");
++		return;
++	}
++	wpa_printf(MSG_DEBUG, "HAPDTI %s: for %s", __func__, bss->conf->ssid.ssid);
++	ap_for_each_sta(bss, hostapd_remove_invalid_station, NULL);
++}
++
++
++int hostapd_load_acl(const char* fname, struct hostapd_bss_config *bss)
++{
++	FILE *f;
++	char buf[256], *pos;
++	int line = 0;
++	
++	wpa_printf(MSG_DEBUG, "HAPDTI %s: %s", __func__, fname);
++
++	f = fopen(fname, "r");
++	if (f == NULL) {
++		wpa_printf(MSG_ERROR, "Could not open configuration file '%s' "
++			   "for reading.", fname);
++		return -1;
++	}
++
++	while (fgets(buf, sizeof(buf), f)) {
++		// bss = conf->last_bss;   Idan
++		line++;
++
++		if (buf[0] == '#')
++			continue;
++		pos = buf;
++		while (*pos != '\0') {
++			if (*pos == '\n') { 
++				*pos = '\0';
++				break;
++			}
++			pos++;
++		}
++		if (buf[0] == '\0')
++			continue;
++
++		pos = os_strchr(buf, '=');
++		if (pos == NULL) {
++			wpa_printf(MSG_ERROR, "Line %d: invalid line '%s'",
++				   line, buf);
++			continue;
++		}
++		*pos = '\0';
++		pos++;
++
++		if (os_strcmp(buf, "macaddr_acl") == 0) {
++			bss->macaddr_acl = atoi(pos);
++			if (bss->macaddr_acl != ACCEPT_UNLESS_DENIED &&
++					bss->macaddr_acl != DENY_UNLESS_ACCEPTED &&
++					bss->macaddr_acl != USE_EXTERNAL_RADIUS_AUTH) {
++				wpa_printf(MSG_ERROR, "Line %d: unknown "
++						"macaddr_acl %d",
++						line, bss->macaddr_acl);
++			}
++		} else if (os_strcmp(buf, "accept_mac_file") == 0) {
++			os_free(bss->accept_mac);
++			bss->accept_mac = NULL;
++			bss->num_accept_mac = 0;
++			if (hostapd_config_read_maclist(pos, &bss->accept_mac,
++					&bss->num_accept_mac))
++			{
++				wpa_printf(MSG_ERROR, "Line %d: Failed to "
++						"read accept_mac_file '%s'",
++						line, pos);
++			}
++			else {
++				wpa_printf(MSG_DEBUG, "HAPDTI %s: total of %d addresses in whitelist", 
++						__func__, bss->num_accept_mac);
++			}
++		} else if (os_strcmp(buf, "deny_mac_file") == 0) {
++			os_free(bss->deny_mac);
++			bss->deny_mac = NULL;
++			bss->num_deny_mac = 0;
++			if (hostapd_config_read_maclist(pos, &bss->deny_mac,
++					&bss->num_deny_mac)) {
++				wpa_printf(MSG_ERROR, "Line %d: Failed to "
++						"read deny_mac_file '%s'",
++						line, pos);
++			}
++			else {
++				wpa_printf(MSG_DEBUG, "HAPDTI %s: total of %d addresses in blacklist", 
++						__func__, bss->num_deny_mac);
++			}
++		}
++
++	}
++
++	fclose(f);
++	
++	return 0;
++}
++
++
++int hostapd_reload_acl() {
++	struct hapd_interfaces *hapds = eloop_get_user_data();
++	int i, j;
++	
++	wpa_printf(MSG_DEBUG, "HAPDTI %s", __func__);
++	
++	for (i = 0; i < hapds->count; i++) {
++		for (j = 0; j < hapds->iface[i]->num_bss; j++) {
++			if (hostapd_load_acl(hapds->iface[i]->config_fname, 
++					hapds->iface[i]->bss[j]->conf) < 0) {
++				wpa_printf(MSG_WARNING, "Failed to read new "
++						"configuration file - continuing with "
++						"old.");
++				continue;
++			}
++			hostapd_remove_invalid_stations(hapds->iface[i]->bss[j]);
++		}
++	}
++	
++	return 0;
++}
++
++#endif
++
++
+ /**
+  * hostapd_config_read - Read and parse a configuration file
+  * @fname: Configuration file name (including path, if needed)
+diff -Naur hostapd-0.6.9/hostapd/config.h hostapd/hostapd/config.h
+--- hostapd-0.6.9/hostapd/config.h	2009-03-23 16:06:28.000000000 +0200
++++ hostapd/hostapd/config.h	2010-02-23 14:39:26.000420000 +0200
+@@ -412,4 +412,8 @@
+ hostapd_get_eap_user(const struct hostapd_bss_config *conf, const u8 *identity,
+ 		     size_t identity_len, int phase2);
+ 
++#ifndef CONFIG_NO_TI
++int hostapd_reload_acl();
++#endif
++
+ #endif /* CONFIG_H */
+diff -Naur hostapd-0.6.9/hostapd/ctrl_iface.c hostapd/hostapd/ctrl_iface.c
+--- hostapd-0.6.9/hostapd/ctrl_iface.c	2009-03-23 16:06:28.000000000 +0200
++++ hostapd/hostapd/ctrl_iface.c	2010-02-23 14:39:26.000742000 +0200
+@@ -260,7 +260,6 @@
+ }
+ #endif /* CONFIG_WPS */
+ 
+-
+ static void hostapd_ctrl_iface_receive(int sock, void *eloop_ctx,
+ 				       void *sock_ctx)
+ {
+@@ -357,6 +356,20 @@
+ 		if (hostapd_wps_button_pushed(hapd))
+ 			reply_len = -1;
+ #endif /* CONFIG_WPS */
++#ifndef CONFIG_NO_TI
++	} else if (os_strncmp(buf, "RELOAD_ACL", 12) == 0) {
++		if (hostapd_reload_acl())
++			reply_len = -1;	
++#endif
++	} else if (os_strcmp(buf, "RECONFIG") == 0) {
++		if (hostapd_reconfig_iface(hapd->iface))
++			reply_len = -1;
++	} else if (os_strcmp(buf, "STOP") == 0) {
++		if (hostapd_stop_iface_driver(hapd->iface))
++			reply_len = -1;
++	} else if (os_strncmp(buf, "START ", 6) == 0) {
++		if (hostapd_start_iface(hapd->iface, buf + 6))
++			reply_len = -1;
+ 	} else {
+ 		os_memcpy(reply, "UNKNOWN COMMAND\n", 16);
+ 		reply_len = 16;
+diff -Naur hostapd-0.6.9/hostapd/driver_wilink.c hostapd/hostapd/driver_wilink.c
+--- hostapd-0.6.9/hostapd/driver_wilink.c	1970-01-01 02:00:00.000000000 +0200
++++ hostapd/hostapd/driver_wilink.c	2010-02-23 14:39:26.001445000 +0200
+@@ -0,0 +1,1182 @@
++/*
++ * driver_wilink.c
++ *
++ * Copyright 2001-2010 Texas Instruments, Inc. - http://www.ti.com/
++ * 
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ * 
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ * 
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and  
++ * limitations under the License.
++ */
++
++/** \file driver_wilink.c
++ *  \brief hostapd interface to WiLink driver
++ *
++ *  \see driver.h
++ */
++
++#include "includes.h"
++
++#include <sys/ioctl.h>
++#include <net/if.h>
++#include <netpacket/packet.h>
++#include "wireless_copy.h"
++#include <linux/filter.h>
++#include <linux/rtnetlink.h>
++#include <net/if_arp.h>
++
++#include "hostapd.h"
++#include "driver.h"
++#include "ieee802_1x.h"
++#include "eloop.h"
++#include "ieee802_11.h"
++#include "sta_info.h"
++#include "hw_features.h"
++#include "mlme.h"
++#include "l2_packet/l2_packet.h"
++#include "utils/common.h"
++#include "APExternalIf.h"
++#include "privateCmd.h"
++#include "common.h"
++#include "wpa.h"
++#include "wpa_auth_i.h"
++#include "regulatory.h"
++
++#include <signal.h>
++#include <execinfo.h>
++
++
++#define WILINK_CTRL_HDR_GET_STATUS(c) ((c) & 0x07)
++
++struct wilink_driver_data {
++	struct hostapd_data *hapd;
++
++	char iface[IFNAMSIZ + 1];
++	int cmd_sock;   /* socket for wext commands   */
++	int event_sock; /* socket for wireless events */
++
++	struct l2_packet_data *eapol_l2;  /* socket for EAPOL frames    */
++	struct l2_packet_data  *mlme_l2;  /* socket for monitor         */
++
++    TApChanHwInfo     *pRegDomain;
++    RegDomainStruct_t *pRegDomainHandle;
++
++	int we_version;
++
++	int dtim_int;
++	int beacon_int;
++};
++
++
++void wilink_rx_eapol(void *ctx, const u8 *src_addr, const u8 *buf, size_t len) {
++	struct wilink_driver_data *drv = ctx;
++
++	wpa_printf(MSG_DEBUG, "HAPDTI %s: received EAPOL with len %d from " MACSTR, __func__, 
++			(int) len, MAC2STR(src_addr));
++	ieee802_1x_receive(drv->hapd, src_addr, buf, len);
++}
++
++
++static void wilink_tx_callback(struct hostapd_data *hapd, u8 *buf, size_t len,
++		int ok)
++{
++	struct ieee80211_hdr *hdr;
++	u16 fc, type, stype;
++
++	wpa_printf(MSG_DEBUG, "HAPDTI %s: TX complete: %s", __func__, ok ? "OK" : "NOT OK");
++
++	hdr = (struct ieee80211_hdr *) buf;
++	fc = le_to_host16(hdr->frame_control);
++
++	type = WLAN_FC_GET_TYPE(fc);
++	stype = WLAN_FC_GET_STYPE(fc);
++
++	switch (type) {
++	case WLAN_FC_TYPE_MGMT:
++		wpa_printf(MSG_DEBUG, "HAPDTI %s: MGMT (TX callback) %s", __func__, ok ? "ACK" : "fail");
++		ieee802_11_mgmt_cb(hapd, buf, len, stype, ok);
++		break;
++	default:
++		wpa_printf(MSG_ERROR, "HAPDTIERR %s: unknown TX callback frame type %d stype %d", 
++				__func__, type, stype);
++		break;
++	}
++}
++
++
++static void wilink_rx_mgmt(void *ctx, const u8 *src_addr, const u8 *data, size_t len) {
++	struct wilink_driver_data *drv = ctx;
++	struct hostapd_data *hapd = drv->hapd;
++	struct ieee80211_hdr *hdr;
++	u16 fc, type, stype;
++	size_t data_len = len;
++	u8* buf;
++    struct sta_info *sta;
++
++	len -=  sizeof(TApFrameHeader);
++	buf = ((u8*) data) + sizeof(TApFrameHeader);
++	/* 'len' and 'buf' now refer to the actual frame less the WILINK hdr */
++
++	wpa_printf(MSG_DEBUG, "%s: received MGMT with len %d from " MACSTR, __func__,
++			(int) len, MAC2STR(src_addr));
++	wpa_hexdump(MSG_DEBUG, "MGMT", data, data_len);
++    wpa_printf(MSG_DEBUG,"\n");
++
++	hdr = (struct ieee80211_hdr *) buf;
++	fc = le_to_host16(hdr->frame_control);
++
++	type = WLAN_FC_GET_TYPE(fc);
++	stype = WLAN_FC_GET_STYPE(fc);
++
++    if (type != WLAN_FC_TYPE_MGMT) {
++		wpa_printf(MSG_ERROR, "HAPDTIERR %s: frame is not mgmt frame", __func__);
++		return;
++	}
++
++	switch (((TApFrameHeader*)data)->sCtrlHdr) { 
++	case AP_CTRL_HDR_RX:
++		wpa_printf(MSG_DEBUG, "HAPDTI %s: processing management frame", __func__);
++		ieee802_11_mgmt(hapd, buf, len, stype, NULL);
++		break;
++    case AP_CTRL_HDR_TX_SUCCESS: 		/* successful TX Complete event */
++        wpa_printf(MSG_DEBUG, "HAPDTI %s: GET TX SUCCSESS", __func__);
++		wilink_tx_callback(hapd, buf, len, 1);
++		return;
++    case AP_CTRL_HDR_TX_FAIL: 			/* fail TX Complete event */
++        wpa_printf(MSG_DEBUG, "HAPDTI %s: GET TX FAIL", __func__);
++		wilink_tx_callback(hapd, buf, len, 0);
++		return;
++	}
++
++    sta = ap_get_sta(hapd,  hdr->addr2);
++    if (!sta) {
++        wpa_printf(MSG_ERROR,"station is not found" MACSTR, MAC2STR(hdr->addr2));
++    }
++    else {
++        sta->flags |= WLAN_STA_AUTH;
++    }
++
++
++}
++
++
++void handler(int sig) {
++	void *array[10];
++	size_t size;
++
++	size = backtrace(array, 10);
++
++	fprintf(stderr, "Error: signal %d:\n", sig);
++	backtrace_symbols_fd(array, size, 2);
++	exit(1);
++}
++
++static int wilink_get_we_version(struct wilink_driver_data *drv)
++{
++	struct iw_range *range;
++	struct iwreq iwr;
++	int minlen;
++	size_t buflen;
++
++	wpa_printf(MSG_DEBUG, "HAPDTI %s: enter", __func__);
++
++	drv->we_version = 0;
++
++	/*
++	 * Use larger buffer than struct iw_range in order to allow the
++	 * structure to grow in the future.
++	 */
++	buflen = sizeof(struct iw_range) + 500;
++	range = os_zalloc(buflen);
++	if (range == NULL)
++		return -1;
++
++	memset(&iwr, 0, sizeof(iwr));
++	os_strlcpy(iwr.ifr_name, drv->iface, IFNAMSIZ);
++	iwr.u.data.pointer = (caddr_t) range;
++	iwr.u.data.length = buflen;
++
++	minlen = ((char *) &range->enc_capa) - (char *) range +
++	sizeof(range->enc_capa);
++
++	if (ioctl(drv->cmd_sock, SIOCGIWRANGE, &iwr) < 0) {
++		perror("ioctl[SIOCGIWRANGE]");
++		free(range);
++		return -1;
++	} else if (iwr.u.data.length >= minlen &&
++			range->we_version_compiled >= 18) {
++		wpa_printf(MSG_DEBUG, "SIOCGIWRANGE: WE(compiled)=%d "
++				"WE(source)=%d enc_capa=0x%x",
++				range->we_version_compiled,
++				range->we_version_source,
++				range->enc_capa);
++		drv->we_version = range->we_version_compiled;
++	}
++
++	free(range);
++	return 0;
++}
++
++static void wilink_wireless_event_wireless_custom(struct wilink_driver_data *drv, char *buf) 
++{
++	TApEvent *pApEvent  = (TApEvent *) buf;
++    unsigned char *pAdr = pApEvent->uAddr;
++
++	wpa_printf(MSG_DEBUG, "HAPDTI %s: event=%u from sta=" MACSTR, __func__, pApEvent->uEvent, MAC2STR(pAdr));
++
++    switch (pApEvent->uEvent) {
++
++    case AP_EVENT_STA_AGING:
++        wpa_printf(MSG_DEBUG, "HAPDTI %s: STA Aging Event, disconnecting STA", __func__);
++        hostapd_wpa_auth_disconnect(drv->hapd, pApEvent->uAddr, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
++        break;
++
++    case AP_EVENT_STA_MIC_FAILURE:
++		wpa_printf(MSG_DEBUG, "HAPDTI %s: STA MICFAILURE Event", __func__);
++		ieee80211_michael_mic_failure(drv->hapd, (const u8*) pAdr, 1);
++		break;
++
++    case AP_EVENT_STA_MAX_TX_RETRY:
++        wpa_printf(MSG_DEBUG, "HAPDTI %s: STA Max Retry event, disconnecting STA", __func__);
++        hostapd_wpa_auth_disconnect(drv->hapd, pApEvent->uAddr, WLAN_REASON_UNSPECIFIED);
++        break;
++
++	case AP_EVENT_DRV_RESET:
++		{
++			char *config_fname;
++			wpa_printf(MSG_DEBUG, "HAPDTI %s: DRV_RESET event", __func__);
++			/*save config file name before it is freed in deinit*/
++			config_fname = os_strdup(drv->hapd->iface->config_fname);
++			if (!config_fname)
++				return -1;
++			hostapd_reset_iface(drv->hapd->iface, config_fname, 0/*don't send deauth*/);
++			os_free(config_fname);
++		}
++		break;
++	default:
++		wpa_printf(MSG_ERROR, "HAPDTIERR %s: unsupported custom event %u", __func__, pApEvent->uEvent);
++	}
++}
++
++
++static void wilink_wireless_event_wireless(struct wilink_driver_data *drv,
++		char *data, int len)
++{
++	struct iw_event iwe_buf, *iwe = &iwe_buf;
++	char *pos, *end, *custom;
++	
++	wpa_printf(MSG_DEBUG, "HAPDTI %s: enter", __func__);
++
++	pos = data;
++	end = data + len;
++
++	while (pos + IW_EV_LCP_LEN <= end) {
++		/* Event data may be unaligned, so make a local, aligned copy
++		 * before processing. */
++		memcpy(&iwe_buf, pos, IW_EV_LCP_LEN);
++		wpa_printf(MSG_DEBUG, "Wireless event: cmd=0x%x len=%d",
++				iwe->cmd, iwe->len);
++		if (iwe->len <= IW_EV_LCP_LEN)
++			return;
++
++		custom = pos + IW_EV_POINT_LEN;
++		if (drv->we_version > 18 &&
++				(iwe->cmd == IWEVMICHAELMICFAILURE ||
++						iwe->cmd == IWEVCUSTOM)) {
++			/* WE-19 removed the pointer from struct iw_point */
++			char *dpos = (char *) &iwe_buf.u.data.length;
++			int dlen = dpos - (char *) &iwe_buf;
++			memcpy(dpos, pos + IW_EV_LCP_LEN,
++					sizeof(struct iw_event) - dlen);
++		} else {
++			memcpy(&iwe_buf, pos, sizeof(struct iw_event));
++			custom += IW_EV_POINT_OFF;
++		}
++
++		switch (iwe->cmd) {
++		case IWEVCUSTOM:
++			if (custom + iwe->u.data.length > end)
++				return;
++		
++			wilink_wireless_event_wireless_custom(drv, custom);
++
++			break;
++		}
++
++		pos += iwe->len;
++	}
++}
++
++
++
++
++static void wilink_wireless_event_rtm_newlink(struct wilink_driver_data *drv,
++		struct nlmsghdr *h, int len)
++{
++	struct ifinfomsg *ifi;
++	int attrlen, nlmsg_len, rta_len;
++	struct rtattr *attr;
++
++	wpa_printf(MSG_DEBUG, "HAPDTI %s: enter", __func__);
++	
++	if (len < (int) sizeof(*ifi))
++		return;
++
++	ifi = NLMSG_DATA(h);
++
++	/* TODO: use ifi->ifi_index to filter out wireless events from other
++	 * interfaces */
++
++	nlmsg_len = NLMSG_ALIGN(sizeof(struct ifinfomsg));
++
++	attrlen = h->nlmsg_len - nlmsg_len;
++	if (attrlen < 0)
++		return;
++
++	attr = (struct rtattr *) (((char *) ifi) + nlmsg_len);
++
++	rta_len = RTA_ALIGN(sizeof(struct rtattr));
++	while (RTA_OK(attr, attrlen)) {
++		if (attr->rta_type == IFLA_WIRELESS) {
++			wilink_wireless_event_wireless(
++					drv, ((char *) attr) + rta_len,
++					attr->rta_len - rta_len);
++		}
++		attr = RTA_NEXT(attr, attrlen);
++	}
++}
++
++
++
++static void wilink_wireless_event_receive(int sock, void *eloop_ctx,
++		void *sock_ctx)
++{
++	char buf[256];
++	int left;
++	struct sockaddr_nl from;
++	socklen_t fromlen;
++	struct nlmsghdr *h;
++	struct wilink_driver_data *drv = eloop_ctx;
++	
++	wpa_printf(MSG_DEBUG, "HAPDTI %s: enter", __func__);
++
++	fromlen = sizeof(from);
++	left = recvfrom(sock, buf, sizeof(buf), MSG_DONTWAIT,
++			(struct sockaddr *) &from, &fromlen);
++	if (left < 0) {
++		if (errno != EINTR && errno != EAGAIN)
++			perror("recvfrom(netlink)");
++		return;
++	}
++
++	h = (struct nlmsghdr *) buf;
++	while (left >= (int) sizeof(*h)) {
++		int len, plen;
++
++		len = h->nlmsg_len;
++		plen = len - sizeof(*h);
++		if (len > left || plen < 0) {
++			wpa_printf(MSG_ERROR, "%s: Malformed netlink message: len=%d left=%d plen=%d\n", __func__, len, left, plen);
++			break;
++		}
++
++		switch (h->nlmsg_type) {
++		case RTM_NEWLINK:
++			wilink_wireless_event_rtm_newlink(drv, h, plen);
++			break;
++		}
++
++		len = NLMSG_ALIGN(len);
++		left -= len;
++		h = (struct nlmsghdr *) ((char *) h + len);
++	}
++
++	if (left > 0) {
++		wpa_printf(MSG_ERROR, "%s: %d extra bytes in the end of netlink message\n", __func__, left);
++	}
++}
++
++
++
++
++static int wilink_wireless_event_init(void *priv)
++{
++	struct wilink_driver_data *drv = priv;
++	int s;
++	struct sockaddr_nl local;
++
++	wpa_printf(MSG_DEBUG, "HAPDTI %s: enter", __func__);
++
++	wilink_get_we_version(drv);
++
++	drv->event_sock = -1;
++
++	s = socket(PF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
++	if (s < 0) {
++		perror("socket(PF_NETLINK,SOCK_RAW,NETLINK_ROUTE)");
++		return -1;
++	}
++
++	memset(&local, 0, sizeof(local));
++	local.nl_family = AF_NETLINK;
++	local.nl_groups = RTMGRP_LINK;
++	if (bind(s, (struct sockaddr *) &local, sizeof(local)) < 0) {
++		perror("bind(netlink)");
++		close(s);
++		return -1;
++	}
++
++	eloop_register_read_sock(s, wilink_wireless_event_receive, drv,
++			NULL);
++	drv->event_sock = s;
++
++	return 0;
++}
++
++
++
++static void wilink_wireless_event_deinit(void *priv) {
++	struct wilink_driver_data *drv = priv;
++
++	wpa_printf(MSG_DEBUG, "HAPDTI %s: enter", __func__);
++	if (drv->event_sock < 0)
++		return;
++	eloop_unregister_read_sock(drv->event_sock);
++	close(drv->event_sock);
++}
++
++
++static int wilink_send_mgmt_frame(void *priv, const void *data, size_t len,
++		int flags) {
++	struct wilink_driver_data *drv = priv;
++	const struct ieee80211_mgmt *mgmt = data;
++
++	wpa_printf(MSG_DEBUG, " HAPDTI %s: sending %d byte MGMT frame to " MACSTR, __func__,
++			(int) len, MAC2STR(mgmt->da));
++	wpa_hexdump(MSG_DEBUG, "MGMT", data, len);
++    wpa_printf(MSG_DEBUG,"\n");
++   
++    return (l2_packet_send(drv->mlme_l2, mgmt->da, AP_MGMT_ETH_TYPE, data, len) < 0);
++}
++
++
++static int wilink_sta_disassoc(void *priv, const u8 *addr, int reason)
++{
++	struct wilink_driver_data *drv = priv;
++	struct ieee80211_mgmt mgmt;
++
++	wpa_printf(MSG_DEBUG, "HAPDTI %s: enter", __func__);
++
++	memset(&mgmt, 0, sizeof(mgmt));
++	mgmt.frame_control = IEEE80211_FC(WLAN_FC_TYPE_MGMT,
++			WLAN_FC_STYPE_DISASSOC);
++	memcpy(mgmt.da, addr, ETH_ALEN);
++	memcpy(mgmt.sa, drv->hapd->own_addr, ETH_ALEN);
++	memcpy(mgmt.bssid, drv->hapd->own_addr, ETH_ALEN);
++	mgmt.u.disassoc.reason_code = host_to_le16(reason);
++	return  wilink_send_mgmt_frame(drv, &mgmt, IEEE80211_HDRLEN +
++			sizeof(mgmt.u.disassoc), 0);
++}
++
++static int wilink_send_eapol(void *priv, const u8 *addr, const u8 *data,
++		size_t data_len, int encrypt, const u8 *own_addr)
++{
++	struct wilink_driver_data *drv = priv;
++	
++	wpa_printf(MSG_DEBUG, "HAPDTI %s: sending %d byte EAPOL packet to " MACSTR,	__func__,
++			(int) data_len, MAC2STR(addr));
++	
++	return (l2_packet_send(drv->eapol_l2, addr, ETH_P_EAPOL, data, data_len) < 0);	
++}
++
++/* ****************************** PRIVATE COMMANDS ******************** */
++
++static int wilink_send_ti_private_cmd(struct wilink_driver_data *drv, int OpCode, char *buffer, int len)
++{
++	struct iwreq iwr;
++	ti_private_cmd_t private_cmd;
++
++    private_cmd.cmd = OpCode;
++
++    if (OpCode & SET_BIT) 
++	{
++		private_cmd.flags = PRIVATE_CMD_SET_FLAG;
++		private_cmd.in_buffer = buffer;
++		private_cmd.in_buffer_len = len;
++		private_cmd.out_buffer = NULL;
++		private_cmd.out_buffer_len = 0;
++	}
++	if (OpCode & GET_BIT)
++	{
++		private_cmd.flags = PRIVATE_CMD_GET_FLAG;
++		private_cmd.out_buffer = buffer;
++		private_cmd.out_buffer_len = len;
++		private_cmd.in_buffer = buffer;
++		private_cmd.in_buffer_len = len;
++	}
++
++	os_memset(&iwr, 0, sizeof(iwr));
++	os_strncpy(iwr.ifr_name, drv->iface, IFNAMSIZ);	
++
++	iwr.u.data.pointer = &private_cmd;
++	iwr.u.data.length = sizeof(ti_private_cmd_t);
++	iwr.u.data.flags = 0;	
++
++	if (ioctl(drv->cmd_sock, SIOCIWAPPRIV, &iwr) < 0) 
++	{
++		perror("ioctl[SIOCIWFIRSTPRIV+2]");
++		return -1;
++	}
++
++	return 0;
++
++}
++
++static void *wilink_init(struct hostapd_data *hapd)
++{
++	struct wilink_driver_data *drv;
++	int ret;
++
++	wpa_printf(MSG_DEBUG, "HAPDTI %s: enter", __func__);
++	
++    signal(SIGSEGV, handler);	
++
++	drv = os_zalloc(sizeof(struct wilink_driver_data));
++	if (drv == NULL) {
++		wpa_printf(MSG_ERROR, "HAPDTIERR %s: Could not allocate memory for wilink driver data", __func__);
++		return NULL;
++	}
++
++	drv->hapd = hapd;
++    
++   if (hapd->conf == NULL) 
++        wpa_printf(MSG_ERROR,"HAPDTIERR %s: hapd->conf null \n", __func__);
++    else
++       memcpy(drv->iface, hapd->conf->iface, sizeof(drv->iface));
++
++	/* init cmd_sock */
++	drv->cmd_sock = socket(PF_INET, SOCK_DGRAM, 0);
++	if (drv->cmd_sock < 0) {
++		perror("socket(PF_INET,SOCK_DGRAM)");
++		wpa_printf(MSG_ERROR, "HAPDTIERR %s: error creating cmd_sock", __func__);
++		goto failed;
++	}
++
++	/* init l2 sockets */
++	drv->eapol_l2 = l2_packet_init(drv->iface,
++			NULL,
++			ETH_P_EAPOL,
++			wilink_rx_eapol, drv, 0);
++
++    drv->mlme_l2 = l2_packet_init(drv->iface,
++			NULL,
++			AP_MGMT_ETH_TYPE,
++			wilink_rx_mgmt, drv, 0);
++   
++    if (!drv->eapol_l2 || !drv->mlme_l2) {
++		wpa_printf(MSG_ERROR, "HAPDTIERR %s: error creating l2 sockets", __func__);
++		goto failed;
++	}
++
++    if (l2_packet_get_own_addr(drv->eapol_l2, hapd->own_addr))
++    {
++        wpa_printf(MSG_ERROR, "HAPDTIERR %s: cannot retrieve own hwdr addr", __func__);
++        goto failed;
++    }
++
++    drv->pRegDomain = (TApChanHwInfo *) os_zalloc(sizeof(TApChanHwInfo));
++	if (drv->pRegDomain == NULL) {
++		wpa_printf(MSG_ERROR, "HAPDTIERR %s: Could not allocate memory for RegDomain", __func__);
++        goto failed;
++	}
++    drv->pRegDomainHandle = regulatory_create();
++    if (drv->pRegDomainHandle == NULL) {
++		wpa_printf(MSG_ERROR, "HAPDTIERR %s: Could not allocate memory for RegDomain", __func__);
++        goto failed;
++	}
++
++	ret  = wilink_send_ti_private_cmd(drv, ROLE_AP_ENABLE, NULL, 0);
++	if (ret){
++		wpa_printf(MSG_ERROR, "HAPDTIERR %s: error sending ENABLE command to the driver", __func__);
++		goto failed;
++	}
++
++	return drv;
++
++failed:
++    wpa_printf(MSG_ERROR, "HAPDTIERR %s: failed", __func__);
++
++	/* Free of allocated resources will be performed in driver deinit() callback which shall 
++	be called when init() returns NULL*/
++	if (drv->cmd_sock > 0)
++		close(drv->cmd_sock);
++	if (drv->eapol_l2)
++		l2_packet_deinit(drv->eapol_l2);
++	if (drv->mlme_l2)
++		l2_packet_deinit(drv->mlme_l2);
++    if (drv->pRegDomain)
++        free(drv->pRegDomain);
++    regulatory_destroy(drv->pRegDomainHandle);
++    free(drv);
++	return NULL;
++}
++
++static void wilink_deinit(void *priv) {
++	struct wilink_driver_data *drv = priv;
++	int    ret;
++
++	wpa_printf(MSG_DEBUG, "HAPDTI %s: enter",__func__);
++
++	ret  = wilink_send_ti_private_cmd(drv, ROLE_AP_STOP, NULL, 0);
++	if (ret)
++		wpa_printf(MSG_ERROR, "HAPDTIERR %s: error sending STOP command to the driver", __func__);
++	
++
++    if (drv->cmd_sock > 0)
++		close(drv->cmd_sock);
++	if (drv->eapol_l2)
++		l2_packet_deinit(drv->eapol_l2);
++	if (drv->mlme_l2)
++		l2_packet_deinit(drv->mlme_l2);
++    if(drv->pRegDomain)
++		free(drv->pRegDomain);
++
++	regulatory_destroy(drv->pRegDomainHandle);
++	if(drv)
++		free(drv);
++}
++
++static int wilink_sta_deauth(void *priv, const u8 *addr, int reason)
++{
++	struct wilink_driver_data *drv = priv;
++	int	   broadcast;
++
++    wpa_printf(MSG_DEBUG, "HAPDTI %s: enter", __func__);
++	broadcast = (memcmp(addr, "\xff\xff\xff\xff\xff\xff", ETH_ALEN) == 0);
++	if (!broadcast)
++	{
++		TApGeneralParam deauthParams;
++
++		memcpy(deauthParams.cMac, addr, AP_MAC_ADDR);
++		deauthParams.lValue = reason;
++
++		return  wilink_send_ti_private_cmd(drv, ROLE_AP_DEAUTH_STATION, (char*)&deauthParams,sizeof(deauthParams));
++	}
++	else
++	{
++		struct ieee80211_mgmt mgmt;
++
++		memset(&mgmt, 0, sizeof(mgmt));
++		mgmt.frame_control = IEEE80211_FC(WLAN_FC_TYPE_MGMT,
++				WLAN_FC_STYPE_DEAUTH);
++		memcpy(mgmt.da, addr, ETH_ALEN);
++		memcpy(mgmt.sa, drv->hapd->own_addr, ETH_ALEN);
++		memcpy(mgmt.bssid, drv->hapd->own_addr, ETH_ALEN);
++		mgmt.u.deauth.reason_code = host_to_le16(reason);
++		return wilink_send_mgmt_frame(drv, &mgmt, IEEE80211_HDRLEN +
++				sizeof(mgmt.u.deauth), 0);
++	}
++}
++
++
++static int wilink_set_country(void *priv, const char *country)
++{
++	struct wilink_driver_data *drv = priv;
++	int ret = 0;
++
++    if (country)
++    {
++        strcpy(drv->pRegDomain->cCountry, country);
++    }
++    /* build hw capability table */
++    ret = wilink_send_ti_private_cmd(drv,ROLE_AP_GET_HW, (char*)drv->pRegDomain, sizeof(*drv->pRegDomain));
++    regulatory_build_hw_capability(drv->pRegDomainHandle,drv->pRegDomain,drv->hapd->iconf->channel);
++        
++	return ret;
++}
++
++
++static int wilink_set_rts(void *priv, int rts)
++{
++	struct wilink_driver_data *drv = priv;
++	TApGeneralParam GenStruct;
++	int ret = 0;
++
++    GenStruct.lValue = rts;
++	ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_RTS,(char*)&GenStruct,sizeof(GenStruct));
++	return ret;
++}
++
++static int wilink_set_broadcast_ssid(void *priv, int value)
++{
++	struct wilink_driver_data *drv = priv;
++	TApGeneralParam GenStruct;
++	int ret = 0;
++
++    GenStruct.lValue = (value == 1) ? AP_SSID_TYPE_HIDDEN : AP_SSID_TYPE_PUBLIC;
++	ret  = wilink_send_ti_private_cmd(drv, ROLE_AP_SET_SSID_TYPE, (char*)&GenStruct,sizeof(GenStruct));
++	return ret;
++}
++
++static int wilink_set_cts_protect(void *priv, int value)
++{
++	struct wilink_driver_data *drv = priv;
++	TApGeneralParam GenStruct;
++	int ret = 0;
++
++    GenStruct.lValue = value;
++	ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_USE_CTS_PROT,(char*)&GenStruct,sizeof(GenStruct));
++	return ret;
++
++}
++
++
++static int wilink_set_dtim_period(const char *iface, void *priv, int value)
++{
++	struct wilink_driver_data *drv = priv;
++	TApGeneralParam GenStruct;
++	int ret = 0;
++
++    GenStruct.lValue = value;
++    drv->dtim_int = value;
++	ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_DTIM_PERIOD,(char*)&GenStruct,sizeof(GenStruct));
++	return ret;
++}
++
++
++
++static int wilink_set_privacy(const char *ifname, void *priv, int enabled)
++{
++	struct wilink_driver_data *drv = priv;
++	TApGeneralParam GenStruct;
++	int ret = 0;
++
++    GenStruct.lValue = enabled;
++	ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_PRIVACY,(char*)&GenStruct,sizeof(GenStruct));
++	return ret;
++}
++
++
++
++static int wilink_sta_set_flags(void *priv, const u8 *addr,
++		int total_flags, int flags_or, int flags_and)
++{
++	struct wilink_driver_data *drv = priv;
++	TApGeneralParam GenStruct;
++	int ret = 0;
++
++    if (addr == NULL) 
++        return ret;
++    
++    memcpy(GenStruct.cMac,addr,AP_MAC_ADDR);
++	if (flags_or & WLAN_STA_AUTHORIZED)
++		GenStruct.lValue = 1;
++	if (!(flags_and & WLAN_STA_AUTHORIZED))
++		GenStruct.lValue = 0;
++
++	ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_PORT_STATUS,(char*)&GenStruct,sizeof(GenStruct));
++	if (ret) 
++		return ret;
++
++	if (flags_or & WLAN_STA_WME)
++		GenStruct.lValue = 1;
++	if (!(flags_and & WLAN_STA_WME))
++		GenStruct.lValue = 0;
++
++	ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_STA_WME,(char*)&GenStruct,sizeof(GenStruct));
++	if (ret) 
++		return ret;
++
++	if (flags_or & WLAN_STA_SHORT_PREAMBLE)
++		GenStruct.lValue = 1;
++	if (!(flags_and & WLAN_STA_SHORT_PREAMBLE))
++		GenStruct.lValue = 0;
++
++	ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_STA_SHORT_PREAMBLE,(char*)&GenStruct,sizeof(GenStruct));
++	return ret;
++}
++
++
++static int wilink_set_tx_queue_params(void *priv, int queue, int aifs,
++		int cw_min, int cw_max, int burst_time)
++{
++	struct wilink_driver_data *drv = priv;
++	TApTxParams TxParamStruct;
++	int ret = 0;
++
++    TxParamStruct.cQueueId = queue;
++	TxParamStruct.cAifs = aifs;
++	TxParamStruct.sCwmin = cw_min;
++	TxParamStruct.sCwmax = cw_max;
++	TxParamStruct.sTxop = burst_time;
++
++	ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_TX_PARAM,(char*)&TxParamStruct,sizeof(TxParamStruct));
++	return ret;
++
++}
++
++
++static int wilink_set_short_slot_time(void *priv, int value)
++{
++	struct wilink_driver_data *drv = priv;
++	TApGeneralParam GenStruct;
++	int ret = 0;
++
++    GenStruct.lValue = value;
++	ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_USE_SHORT_SLOT_TIME,(char*)&GenStruct,sizeof(GenStruct));
++	return ret;
++}
++
++static int wilink_set_preamble(void *priv, int value)
++{
++	struct wilink_driver_data *drv = priv;
++	TApGeneralParam GenStruct;
++	int ret = 0;
++
++    GenStruct.lValue = value;
++	ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_AP_SHORT_PREAMBLE,(char*)&GenStruct,sizeof(GenStruct));
++	return ret;
++}
++
++static int wilink_set_beacon_int(void *priv, int value)
++{
++	struct wilink_driver_data *drv = priv;
++	TApGeneralParam GenStruct;
++	int ret = 0;
++
++    GenStruct.lValue = value;
++	drv->beacon_int = value;
++	ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_BEACON_INT,(char*)&GenStruct,sizeof(GenStruct));
++	return ret;
++}
++
++
++static int wilink_set_rate_sets(void *priv, int *supp_rates, int *basic_rates,
++		int mode)
++{
++	struct wilink_driver_data *drv = priv;
++	TApRateSet  RateParams;
++	int ret = 0;
++	int i;
++
++	memset(&RateParams, 0, sizeof(RateParams));
++
++	RateParams.cMode = mode;
++
++	if ((supp_rates != NULL) || (basic_rates != NULL))
++	{
++		if (supp_rates != NULL)
++		{
++		  for (i=0; (i<AP_MAX_SUPPORT_RATE && supp_rates[i]>0) ;i++)
++		  {
++			 RateParams.aSupportedRates[i] = supp_rates[i];
++		  }
++		  RateParams.cSuppRateLen = i;
++		}
++	
++		if (basic_rates != NULL)
++		{
++		  for (i=0; (i<AP_MAX_SUPPORT_RATE && basic_rates[i]>0) ;i++)
++		  {
++			 RateParams.aBasicRates[i] = basic_rates[i];
++		  }
++		  RateParams.cBasicRateLen = i;
++		}
++	
++		ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_RATE,(char*)&RateParams,sizeof(RateParams));
++    }
++
++	return ret;
++
++}
++
++static int wilink_read_sta_data(void *priv, struct hostap_sta_driver_data *data,
++		const u8 *addr)
++{
++	struct wilink_driver_data *drv = priv;
++	TApStationInfo staDataStruct;
++	int ret = 0;
++
++    memcpy(staDataStruct.cMac,addr,AP_MAC_ADDR);
++	ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_GET_STATION_PARAM,(char*)&staDataStruct,sizeof(staDataStruct));
++	if(ret == 0)
++	{
++		data->rx_bytes = staDataStruct.iRxBytes;
++		data->tx_bytes = staDataStruct.iTxBytes;
++		data->inactive_msec = staDataStruct.iInactiveTime;
++	}
++
++	return ret;
++}
++
++static int wilink_sta_add2(const char *ifname, void *priv,
++		struct hostapd_sta_add_params *params)
++{
++	struct wilink_driver_data *drv = priv;
++	TApStationParams addStaParams;
++	int ret = 0;
++
++    if (params == NULL)
++       return ret;
++    
++	memcpy(addStaParams.cMac,params->addr,AP_MAC_ADDR);
++    /* Check station supported length */
++    if( params->supp_rates_len > AP_MAX_SUPPORT_RATE )
++    {
++        wpa_printf(MSG_ERROR, "%s: Max supported rates %d from " MACSTR, __func__,
++            (int) params->supp_rates_len, MAC2STR(params->addr));
++
++        /*  Update supported rates according to the AP_MAX_SUPPORT_RATE */
++        params->supp_rates_len = AP_MAX_SUPPORT_RATE;
++
++    }
++	memcpy(addStaParams.cSupportedRates ,params->supp_rates,params->supp_rates_len);
++
++	addStaParams.cSupportedRatesLen = params->supp_rates_len;
++	addStaParams.ilistenInterval = params->listen_interval;
++	addStaParams.sAid = params->aid;
++	addStaParams.sCapability = params->capability;
++    addStaParams.iFlag = params->flags;
++
++	wpa_printf(MSG_DEBUG, "%s: "MACSTR, __func__,MAC2STR(params->addr));
++	wpa_printf(MSG_DEBUG, "%s: addStaParams.ilistenInterval=%u\n",__func__,addStaParams.ilistenInterval);
++	wpa_printf(MSG_DEBUG, "%s: addStaParams.sAid=%u\n",__func__,addStaParams.sAid);
++
++	ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_ADD_STATION_PARAM,(char*)&addStaParams,sizeof(addStaParams));
++
++	return ret;
++}
++
++
++static int wilink_set_channel(void *priv,int mode, int freq)
++{
++	struct wilink_driver_data *drv = priv;
++	TApChannelParams ChannelParams;
++	int ret = 0;
++
++    memset(&ChannelParams, 0, sizeof(ChannelParams));
++    ChannelParams.cChannel = hostapd_hw_get_channel(drv->hapd,freq);
++
++    ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_CHANNEL,(char*)&ChannelParams,sizeof(ChannelParams));
++	return ret;
++
++}
++
++static int wilink_sta_remove(void *priv, const u8 *addr)
++{
++	struct wilink_driver_data *drv = priv;
++	TApGeneralParam DelStationParams;
++	int ret = 0;
++
++    if (addr == NULL)
++       return ret;
++    
++    memcpy(DelStationParams.cMac,addr,AP_MAC_ADDR);
++	ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_REMOVE_STATION,(char*)&DelStationParams,sizeof(DelStationParams));
++	return ret;
++
++}
++
++static int wilink_set_beacon(const char *iface, void *priv,
++		u8 *head, size_t head_len,
++		u8 *tail, size_t tail_len)
++
++{
++	struct wilink_driver_data *drv = priv;
++	TApBeaconParams BeaconParams;
++	int ret = 0;
++
++    if ((head == NULL) || (tail == NULL)) 
++       return -1;
++    
++    memcpy(BeaconParams.cHead,head,head_len);
++	memcpy(BeaconParams.cTail,tail,tail_len);
++	BeaconParams.iHeadLen = head_len;
++	BeaconParams.iTailLen = tail_len;
++	BeaconParams.sBeaconIntval = drv->beacon_int;
++	BeaconParams.iDtimIntval = drv->dtim_int;
++
++	ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_ADD_BEACON_PARAM,(char*)&BeaconParams,sizeof(BeaconParams));
++	return ret;
++
++}
++
++static int wilink_set_internal_bridge(void *priv, int value)
++{
++    struct wilink_driver_data *drv = priv;
++    TApGeneralParam bridgeParam;
++    int ret = 0;
++
++    bridgeParam.lValue = value;
++
++    ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_BSS_BRIDGE,(char*)&bridgeParam,sizeof(bridgeParam));
++
++    return ret;
++}
++
++static int wilink_set_encryption (const char *iface, void *priv, const char *alg,
++		const u8 *addr, int idx, const u8 *key,
++		size_t key_len, int txkey)
++{
++	struct wilink_driver_data *drv = priv;
++	TApAddKeyParams AddKeyParams;
++    TApGeneralParam GenParams;
++	int ret = 0;
++
++    memset(&AddKeyParams,0,sizeof(AddKeyParams));
++    if (addr)
++      memcpy(AddKeyParams.cMac,addr,AP_MAC_ADDR);
++    else
++      memset(AddKeyParams.cMac,0,AP_MAC_ADDR);
++   
++	if (strcmp(alg, "none") == 0)
++	{
++		ret  = wilink_send_ti_private_cmd(drv,TWD_DEL_KEY_PARAMS,(char*)&AddKeyParams,sizeof(AddKeyParams));
++    }
++	else
++	{
++		if (strcmp(alg, "WEP") == 0)
++			AddKeyParams.cAlg = AP_WEP_CIPHER;
++		else if (strcmp(alg, "TKIP") == 0)
++			AddKeyParams.cAlg = AP_TKIP_CIPHER;
++		else if (strcmp(alg, "CCMP") == 0)
++			AddKeyParams.cAlg = AP_CCMP_CIPHER;
++		else if (strcmp(alg, "IGTK") == 0)
++			AddKeyParams.cAlg = AP_IGTK_CIPHER;
++		else
++			AddKeyParams.cAlg = AP_WEP_CIPHER;
++
++		AddKeyParams.cKeyIndex = idx;
++		AddKeyParams.cTxKey = txkey;
++		AddKeyParams.ckeyLen = key_len;
++		memcpy(AddKeyParams.cKey,key,key_len);
++
++        if ((AddKeyParams.cAlg == AP_WEP_CIPHER)&& (txkey))
++        {
++          GenParams.lValue = AddKeyParams.cKeyIndex; 
++           wilink_send_ti_private_cmd(drv,TWD_SET_DEFAULT_KEY_PARAMS,(char*)&GenParams,sizeof(GenParams));
++        }
++             
++        ret  = wilink_send_ti_private_cmd(drv,TWD_ADD_KEY_PARAMS,(char*)&AddKeyParams,sizeof(AddKeyParams));
++        
++	}
++
++	return ret;
++}
++
++static int wilink_flush(void *priv)
++{
++	struct wilink_driver_data *drv = priv;
++	int ret = 0;
++
++    ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_REMOVE_ALL_STATION,NULL,0);
++	return ret;
++}
++
++static int wilink_commit(void *priv)
++{
++    struct wilink_driver_data *drv = priv;
++    TApGeneralParam GenStruct;
++    int ret = 0;
++
++    wpa_printf(MSG_DEBUG, "HAPDTI %s: COMMIT", __func__);
++
++    GenStruct.lValue = drv->hapd->conf->ap_max_inactivity;
++
++    ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_COMMIT_CMD,(char*)&GenStruct,sizeof(TApGeneralParam));
++    return ret;
++
++}
++
++
++static int wilink_set_ssid(const char *ifname, void *priv, const u8 *buf,
++			int len) {
++    struct wilink_driver_data *drv = priv;
++    int ret = 0;
++    TApSsidParam ssidParam;
++
++    if (buf == NULL)
++      return ret;
++    
++    if (len > AP_MAX_SSID_LEN) {
++        wpa_printf(MSG_ERROR, "%s: len is too big", __func__);
++        return -1;
++    }
++
++    memcpy(ssidParam.cSsid, buf, len);
++    ssidParam.iSsidLen = len;
++    
++    ret  = wilink_send_ti_private_cmd(drv,ROLE_AP_SET_SSID,(char *)&ssidParam,sizeof(ssidParam));
++    return ret;
++}
++
++
++
++
++static struct hostapd_hw_modes *
++ wilink_get_hw_feature_data(void *priv, u16 *num_modes, u16 *flags)
++{
++    struct wilink_driver_data *drv = priv;
++
++   if (!(drv->pRegDomain->cCountry[0] || drv->pRegDomain->cCountry[1]))
++    {
++        /* Build hw capability table for default regulatory domain (all channels) if country code is not set */
++        wilink_send_ti_private_cmd(drv, ROLE_AP_GET_HW, (char*)drv->pRegDomain, sizeof(*drv->pRegDomain));
++        regulatory_build_hw_capability(drv->pRegDomainHandle,drv->pRegDomain,drv->hapd->iconf->channel);
++    }
++    
++  *num_modes =  drv->pRegDomainHandle->NumOfModes;
++  *flags = 0;
++    
++  return drv->pRegDomainHandle->modes;
++}
++
++
++
++
++
++const struct wpa_driver_ops wpa_driver_wilink_ops = {
++		.name = "wilink",
++		.init = wilink_init,
++		.deinit = wilink_deinit,
++		.wireless_event_init = wilink_wireless_event_init,
++		.wireless_event_deinit = wilink_wireless_event_deinit,
++
++		.send_eapol = wilink_send_eapol,
++		.send_mgmt_frame = wilink_send_mgmt_frame,
++
++		.sta_deauth = wilink_sta_deauth,
++		.sta_disassoc = wilink_sta_disassoc,
++		
++		/* commands */
++		.set_privacy = wilink_set_privacy,
++	    .set_encryption = wilink_set_encryption,
++		.flush = wilink_flush,
++		.read_sta_data = wilink_read_sta_data,
++		.sta_set_flags = wilink_sta_set_flags,
++		.sta_remove = wilink_sta_remove,
++		.sta_add2 = wilink_sta_add2,
++	    .set_freq = wilink_set_channel,
++		.set_rts = wilink_set_rts,
++		.set_rate_sets = wilink_set_rate_sets,
++		.set_beacon = wilink_set_beacon,
++        .set_internal_bridge = wilink_set_internal_bridge,
++		.set_beacon_int = wilink_set_beacon_int,
++		.set_dtim_period = wilink_set_dtim_period,
++        .set_broadcast_ssid = wilink_set_broadcast_ssid,
++		.set_cts_protect = wilink_set_cts_protect,
++		.set_preamble = wilink_set_preamble,
++		.set_short_slot_time = wilink_set_short_slot_time,
++		.set_tx_queue_params = wilink_set_tx_queue_params,
++	    .set_country = wilink_set_country,
++        .commit = wilink_commit,
++        .set_ssid = wilink_set_ssid,
++        .get_hw_feature_data = wilink_get_hw_feature_data,
++};
+diff -Naur hostapd-0.6.9/hostapd/drivers.c hostapd/hostapd/drivers.c
+--- hostapd-0.6.9/hostapd/drivers.c	2009-03-23 16:06:28.000000000 +0200
++++ hostapd/hostapd/drivers.c	2010-02-23 14:39:26.000646000 +0200
+@@ -33,6 +33,9 @@
+ #ifdef CONFIG_DRIVER_BSD
+ extern struct wpa_driver_ops wpa_driver_bsd_ops; /* driver_bsd.c */
+ #endif /* CONFIG_DRIVER_BSD */
++#ifdef CONFIG_DRIVER_WILINK
++extern struct wpa_driver_ops wpa_driver_wilink_ops; /* driver_wilink.c */
++#endif /* CONFIG_DRIVER_WILINK */
+ #ifdef CONFIG_DRIVER_WIRED
+ extern struct wpa_driver_ops wpa_driver_wired_ops; /* driver_wired.c */
+ #endif /* CONFIG_DRIVER_WIRED */
+@@ -64,6 +67,9 @@
+ #ifdef CONFIG_DRIVER_BSD
+ 	&wpa_driver_bsd_ops,
+ #endif /* CONFIG_DRIVER_BSD */
++#ifdef CONFIG_DRIVER_WILINK
++	&wpa_driver_wilink_ops,
++#endif /* CONFIG_DRIVER_WILINK */
+ #ifdef CONFIG_DRIVER_WIRED
+ 	&wpa_driver_wired_ops,
+ #endif /* CONFIG_DRIVER_WIRED */
+diff -Naur hostapd-0.6.9/hostapd/hostapd.c hostapd/hostapd/hostapd.c
+--- hostapd-0.6.9/hostapd/hostapd.c	2009-03-23 16:06:28.000000000 +0200
++++ hostapd/hostapd/hostapd.c	2010-02-23 14:39:26.001477000 +0200
+@@ -61,6 +61,7 @@
+ 
+ unsigned char rfc1042_header[6] = { 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00 };
+ 
++static int debug;
+ 
+ extern int wpa_debug_level;
+ extern int wpa_debug_show_keys;
+@@ -385,7 +386,6 @@
+ 	return 0;
+ }
+ 
+-
+ #ifndef CONFIG_NATIVE_WINDOWS
+ /**
+  * handle_reload - SIGHUP handler to reload configuration
+@@ -702,7 +702,7 @@
+ {
+ 	hostapd_free_hw_features(iface->hw_features, iface->num_hw_features);
+ 	iface->hw_features = NULL;
+-	os_free(iface->current_rates);
++    os_free(iface->current_rates);
+ 	iface->current_rates = NULL;
+ 	ap_list_deinit(iface);
+ 	hostapd_config_free(iface->conf);
+@@ -710,7 +710,6 @@
+ 
+ 	os_free(iface->config_fname);
+ 	os_free(iface->bss);
+-	os_free(iface);
+ }
+ 
+ 
+@@ -784,7 +783,7 @@
+ }
+ 
+ 
+-static void hostapd_wpa_auth_disconnect(void *ctx, const u8 *addr,
++void hostapd_wpa_auth_disconnect(void *ctx, const u8 *addr,
+ 					u16 reason)
+ {
+ 	struct hostapd_data *hapd = ctx;
+@@ -1799,24 +1798,22 @@
+ 
+ 
+ /**
+- * hostapd_init - Allocate and initialize per-interface data
++ * hostapd_init - Initialize per-interface data
++ * @hapd_iface: Pointer to the interface structure
+  * @config_file: Path to the configuration file
+- * Returns: Pointer to the allocated interface data or %NULL on failure
++ * Returns: 0 or error status on failure
+  *
+  * This function is used to allocate main data structures for per-interface
+  * data. The allocated data buffer will be freed by calling
+  * hostapd_cleanup_iface().
+  */
+-static struct hostapd_iface * hostapd_init(const char *config_file)
++static int hostapd_init(struct hostapd_iface *hapd_iface, const char *config_file)
+ {
+-	struct hostapd_iface *hapd_iface = NULL;
+ 	struct hostapd_config *conf = NULL;
+ 	struct hostapd_data *hapd;
+ 	size_t i;
+ 
+-	hapd_iface = os_zalloc(sizeof(*hapd_iface));
+-	if (hapd_iface == NULL)
+-		goto fail;
++	os_memset(hapd_iface, 0, sizeof(*hapd_iface));
+ 
+ 	hapd_iface->config_fname = os_strdup(config_file);
+ 	if (hapd_iface->config_fname == NULL)
+@@ -1841,7 +1838,7 @@
+ 			goto fail;
+ 	}
+ 
+-	return hapd_iface;
++	return 0;
+ 
+ fail:
+ 	if (conf)
+@@ -1853,11 +1850,178 @@
+ 				tls_deinit(hapd->ssl_ctx);
+ 		}
+ 
+-		os_free(hapd_iface->config_fname);
+-		os_free(hapd_iface->bss);
+-		os_free(hapd_iface);
++		if (hapd_iface->config_fname) os_free(hapd_iface->config_fname);
++        if (hapd_iface->bss) os_free(hapd_iface->bss);
+ 	}
+-	return NULL;
++	return -1;
++}
++
++/**
++ * hostapd_init_iface - Initialize and setup per-interface data
++ * @hapd_iface: Pointer to the interface structure
++ * @config_file: Path to the configuration file
++ * Returns: 0 or error status on failure
++ *
++ * This function is used to allocate main data structures for per-interface
++ * data and to setup the interface
++ */
++static int hostapd_init_iface(struct hostapd_iface *iface, const char *config_file)
++{
++	int ret, k;
++
++	wpa_printf(MSG_DEBUG, "**************%s**************", __func__);
++	
++	ret = hostapd_init(iface, config_file);
++	if (ret)
++		return -1;
++
++	for (k = 0; k < debug; k++) {
++		if (iface->bss[0]->conf->logger_stdout_level > 0)
++			iface->bss[0]->conf->logger_stdout_level--;
++	}
++
++	ret = hostapd_setup_interface(iface);
++	if (ret)
++		return -1;
++
++	return 0;
++}
++
++
++/**
++ * hostapd_deinit_iface - Deinitialize and cleanup per-interface
++ * data
++ * @hapd_iface: Pointer to the interface structure
++ * Returns: none
++ */
++static void hostapd_deinit_iface(struct hostapd_iface *iface)
++{
++	int j;
++
++	wpa_printf(MSG_DEBUG, "**************%s**************", __func__);
++
++	if (!iface)
++		return;
++
++	hostapd_cleanup_iface_pre(iface);
++	for (j = 0; j < iface->num_bss; j++) {
++		struct hostapd_data *hapd = iface->bss[j];
++
++		hostapd_cleanup(hapd);
++		if (j == iface->num_bss - 1 && hapd->driver)
++			hostapd_driver_deinit(hapd);
++	}
++
++	for (j = 0; j < iface->num_bss; j++)
++		os_free(iface->bss[j]);
++
++	hostapd_cleanup_iface(iface);
++
++}
++
++/**
++ * hostapd_reset_iface - Reset interface data
++ * @hapd_iface: Pointer to the interface structure
++ * @config_fname: config file name
++ * @deauth_stas: if to send deauth brcst to connected stations
++ * Returns: 0 or error code on failure
++ */
++int hostapd_reset_iface(struct hostapd_iface *iface, const char *config_fname, int deauth_stas)
++{
++	int j, ret;
++
++	if (!iface)
++		return -1;
++
++	for (j = 0; j < iface->num_bss; j++) {
++		struct hostapd_data *hapd = iface->bss[j];
++        hostapd_free_stas(hapd);
++		if (deauth_stas){
++			hostapd_flush_old_stations(hapd);
++			/*Sleep in order to wait for DEAUTH frame to be transmitted*/
++            sleep(1);
++		}
++	}
++
++	hostapd_deinit_iface(iface);
++
++	ret = hostapd_init_iface(iface, config_fname);
++	if (ret)
++	{
++		wpa_printf(MSG_ERROR, "%s: Failed to initialize interface", __func__);
++        hostapd_deinit_iface(iface);
++        return -1;
++	}
++
++	return ret;
++}
++
++/**
++ * hostapd_reconfig_iface - Re-read config file and reload
++ * interface with new configuration
++ * @hapd_iface: Pointer to the interface structure
++ * Returns: 0 or error code on failure
++ */
++int hostapd_reconfig_iface(struct hostapd_iface *iface)
++{
++	char *config_fname;
++	int ret;
++
++	wpa_printf(MSG_DEBUG, "***********%s********", __func__);
++
++	/*save config file name before it is freed in deinit*/
++	config_fname = os_strdup(iface->config_fname);
++	if (!config_fname)
++		return -1;
++
++	ret = hostapd_reset_iface(iface, config_fname, 1/*send deauth*/);
++
++	os_free(config_fname);
++
++	return ret;
++}
++
++/**
++ * hostapd_start_iface - Restart the interface
++ * @hapd_iface: Pointer to the interface structure
++ * @config_fname: config file name
++ * Returns: 0 or error code on failure
++ */
++int hostapd_start_iface(struct hostapd_iface *iface, const char *config_fname)
++{
++	wpa_printf(MSG_DEBUG, "***********%s********", __func__);
++
++	return hostapd_reset_iface(iface, config_fname, 1/*send deauth*/);
++}
++
++/**
++ * hostapd_stop_iface - Stop the interface driver
++ * @hapd_iface: Pointer to the interface structure
++ * Returns: 0 or error code on failure
++ */
++int hostapd_stop_iface_driver(struct hostapd_iface *iface)
++{
++	int i;
++
++	wpa_printf(MSG_DEBUG, "***********%s********", __func__);
++
++	if (!iface)
++		return -1;
++
++	for (i = 0; i < iface->num_bss; i++) 
++	{
++		struct hostapd_data *hapd = iface->bss[i];
++
++		hostapd_free_stas(hapd);
++		hostapd_flush_old_stations(hapd);
++		/*Sleep in order to wait for DEAUTH frame to be transmitted*/
++		sleep(1);
++		if ((i == iface->num_bss - 1) && (hapd->driver))
++			hostapd_driver_deinit(hapd);
++		hapd->driver = NULL;
++	}
++
++	return 0;
+ }
+ 
+ 
+@@ -1866,9 +2030,11 @@
+ 	struct hapd_interfaces interfaces;
+ 	int ret = 1, k;
+ 	size_t i, j;
+-	int c, debug = 0, daemonize = 0, tnc = 0;
++	int c, daemonize = 0, tnc = 0;
+ 	const char *pid_file = NULL;
+ 
++	debug = 0;
++
+ 	hostapd_logger_register_cb(hostapd_logger_cb);
+ 
+ 	for (;;) {
+@@ -1939,20 +2105,16 @@
+ 	for (i = 0; i < interfaces.count; i++) {
+ 		wpa_printf(MSG_ERROR, "Configuration file: %s",
+ 			   argv[optind + i]);
+-		interfaces.iface[i] = hostapd_init(argv[optind + i]);
++
++		interfaces.iface[i] = os_zalloc(sizeof(struct hostapd_iface));
+ 		if (!interfaces.iface[i])
+ 			goto out;
+-		for (k = 0; k < debug; k++) {
+-			if (interfaces.iface[i]->bss[0]->conf->
+-			    logger_stdout_level > 0)
+-				interfaces.iface[i]->bss[0]->conf->
+-					logger_stdout_level--;
+-		}
+ 
+-		ret = hostapd_setup_interface(interfaces.iface[i]);
++		ret = hostapd_init_iface(interfaces.iface[i], argv[optind + i]);
+ 		if (ret)
+ 			goto out;
+ 
++
+ 		for (k = 0; k < (int) interfaces.iface[i]->num_bss; k++) {
+ 			if (interfaces.iface[i]->bss[0]->conf->tnc)
+ 				tnc++;
+@@ -1992,20 +2154,9 @@
+  out:
+ 	/* Deinitialize all interfaces */
+ 	for (i = 0; i < interfaces.count; i++) {
+-		if (!interfaces.iface[i])
+-			continue;
+-		hostapd_cleanup_iface_pre(interfaces.iface[i]);
+-		for (j = 0; j < interfaces.iface[i]->num_bss; j++) {
+-			struct hostapd_data *hapd =
+-				interfaces.iface[i]->bss[j];
+-			hostapd_cleanup(hapd);
+-			if (j == interfaces.iface[i]->num_bss - 1 &&
+-			    hapd->driver)
+-				hostapd_driver_deinit(hapd);
+-		}
+-		for (j = 0; j < interfaces.iface[i]->num_bss; j++)
+-			os_free(interfaces.iface[i]->bss[j]);
+-		hostapd_cleanup_iface(interfaces.iface[i]);
++		hostapd_deinit_iface(interfaces.iface[i]);
++		os_free(interfaces.iface[i]);
++
+ 	}
+ 	os_free(interfaces.iface);
+ 
+diff -Naur hostapd-0.6.9/hostapd/hostapd.conf hostapd/hostapd/hostapd.conf
+--- hostapd-0.6.9/hostapd/hostapd.conf	2009-03-23 16:06:28.000000000 +0200
++++ hostapd/hostapd/hostapd.conf	2010-02-23 14:39:26.001505000 +0200
+@@ -3,7 +3,7 @@
+ 
+ # AP netdevice name (without 'ap' postfix, i.e., wlan0 uses wlan0ap for
+ # management frames); ath0 for madwifi
+-interface=wlan0
++interface=tiwlan0
+ 
+ # In case of madwifi and nl80211 driver interfaces, an additional configuration
+ # parameter, bridge, must be used to notify hostapd if the interface is
+@@ -14,7 +14,7 @@
+ # default: hostap). nl80211 is used with all Linux mac80211 drivers.
+ # Use driver=none if building hostapd as a standalone RADIUS server that does
+ # not control any wireless/wired driver.
+-# driver=hostap
++driver=wilink
+ 
+ # hostapd event logger configuration
+ #
+@@ -54,7 +54,9 @@
+ # than one interface is used.
+ # /var/run/hostapd is the recommended directory for sockets and by default,
+ # hostapd_cli will use it when trying to connect with hostapd.
+-ctrl_interface=/var/run/hostapd
++#ctrl_interface=/var/run/hostapd
++ctrl_interface=/tmp
++
+ 
+ # Access control for the control interface can be configured by setting the
+ # directory to allow only members of a group to use sockets. This way, it is
+@@ -75,7 +77,7 @@
+ ##### IEEE 802.11 related configuration #######################################
+ 
+ # SSID to be used in IEEE 802.11 management frames
+-ssid=test
++ssid=ap_test
+ 
+ # Country code (ISO/IEC 3166-1). Used to set regulatory domain.
+ # Set as needed to indicate country in which device is operating.
+@@ -91,14 +93,14 @@
+ 
+ # Operation mode (a = IEEE 802.11a, b = IEEE 802.11b, g = IEEE 802.11g,
+ # Default: IEEE 802.11b
+-hw_mode=a
++hw_mode=g
+ 
+ # Channel number (IEEE 802.11)
+ # (default: 0, i.e., not set)
+ # Please note that some drivers (e.g., madwifi) do not use this value from
+ # hostapd and the channel will need to be configuration separately with
+ # iwconfig.
+-channel=60
++channel=11
+ 
+ # Beacon interval in kus (1.024 ms) (default: 100; range 15..65535)
+ beacon_int=100
+@@ -112,18 +114,11 @@
+ # rejected after the station table is full. IEEE 802.11 has a limit of 2007
+ # different association IDs, so this number should not be larger than that.
+ # (default: 2007)
+-max_num_sta=255
++max_num_sta=5
++
++# RTS/CTS threshold is set via tiwlan.ini file
+ 
+-# RTS/CTS threshold; 2347 = disabled (default); range 0..2347
+-# If this field is not included in hostapd.conf, hostapd will not control
+-# RTS threshold and 'iwconfig wlan# rts <val>' can be used to set it.
+-rts_threshold=2347
+-
+-# Fragmentation threshold; 2346 = disabled (default); range 256..2346
+-# If this field is not included in hostapd.conf, hostapd will not control
+-# fragmentation threshold and 'iwconfig wlan# frag <val>' can be used to set
+-# it.
+-fragm_threshold=2346
++# Fragmentation threshold is not supported
+ 
+ # Rate configuration
+ # Default is to enable all rates supported by the hardware. This configuration
+@@ -136,7 +131,7 @@
+ # default: use the most common supported rate setting for the selected
+ # hw_mode (i.e., this line can be removed from configuration file in most
+ # cases)
+-#supported_rates=10 20 55 110 60 90 120 180 240 360 480 540
++supported_rates=10 20 55 110 60 90 120 180 240 360 480 540
+ 
+ # Basic rate set configuration
+ # List of rates (in 100 kbps) that are included in the basic rate set.
+@@ -154,7 +149,7 @@
+ # disabled (and enabled when such STAs disassociate) dynamically.
+ # 0 = do not allow use of short preamble (default)
+ # 1 = allow use of short preamble
+-#preamble=1
++preamble=1
+ 
+ # Station MAC address -based authentication
+ # Please note that this kind of access control requires a driver that uses
+@@ -177,7 +172,7 @@
+ # Bit fields of allowed authentication algorithms:
+ # bit 0 = Open System Authentication
+ # bit 1 = Shared Key Authentication (requires WEP)
+-auth_algs=3
++auth_algs=1
+ 
+ # Send empty SSID in beacons and ignore probe request frames that do not
+ # specify full SSID, i.e., require stations to know SSID.
+@@ -189,123 +184,9 @@
+ #     requests for broadcast SSID
+ ignore_broadcast_ssid=0
+ 
+-# TX queue parameters (EDCF / bursting)
+-# default for all these fields: not set, use hardware defaults
+-# tx_queue_<queue name>_<param>
+-# queues: data0, data1, data2, data3, after_beacon, beacon
+-#		(data0 is the highest priority queue)
+-# parameters:
+-#   aifs: AIFS (default 2)
+-#   cwmin: cwMin (1, 3, 7, 15, 31, 63, 127, 255, 511, 1023)
+-#   cwmax: cwMax (1, 3, 7, 15, 31, 63, 127, 255, 511, 1023); cwMax >= cwMin
+-#   burst: maximum length (in milliseconds with precision of up to 0.1 ms) for
+-#          bursting
+-#
+-# Default WMM parameters (IEEE 802.11 draft; 11-03-0504-03-000e):
+-# These parameters are used by the access point when transmitting frames
+-# to the clients.
+-#
+-# Low priority / AC_BK = background
+-#tx_queue_data3_aifs=7
+-#tx_queue_data3_cwmin=15
+-#tx_queue_data3_cwmax=1023
+-#tx_queue_data3_burst=0
+-# Note: for IEEE 802.11b mode: cWmin=31 cWmax=1023 burst=0
+-#
+-# Normal priority / AC_BE = best effort
+-#tx_queue_data2_aifs=3
+-#tx_queue_data2_cwmin=15
+-#tx_queue_data2_cwmax=63
+-#tx_queue_data2_burst=0
+-# Note: for IEEE 802.11b mode: cWmin=31 cWmax=127 burst=0
+-#
+-# High priority / AC_VI = video
+-#tx_queue_data1_aifs=1
+-#tx_queue_data1_cwmin=7
+-#tx_queue_data1_cwmax=15
+-#tx_queue_data1_burst=3.0
+-# Note: for IEEE 802.11b mode: cWmin=15 cWmax=31 burst=6.0
+-#
+-# Highest priority / AC_VO = voice
+-#tx_queue_data0_aifs=1
+-#tx_queue_data0_cwmin=3
+-#tx_queue_data0_cwmax=7
+-#tx_queue_data0_burst=1.5
+-# Note: for IEEE 802.11b mode: cWmin=7 cWmax=15 burst=3.3
+-#
+-# Special queues; normally not user configurable
+-#
+-#tx_queue_after_beacon_aifs=2
+-#tx_queue_after_beacon_cwmin=15
+-#tx_queue_after_beacon_cwmax=1023
+-#tx_queue_after_beacon_burst=0
+-#
+-#tx_queue_beacon_aifs=2
+-#tx_queue_beacon_cwmin=3
+-#tx_queue_beacon_cwmax=7
+-#tx_queue_beacon_burst=1.5
+-
+-# 802.1D Tag (= UP) to AC mappings
+-# WMM specifies following mapping of data frames to different ACs. This mapping
+-# can be configured using Linux QoS/tc and sch_pktpri.o module.
+-# 802.1D Tag	802.1D Designation	Access Category	WMM Designation
+-# 1		BK			AC_BK		Background
+-# 2		-			AC_BK		Background
+-# 0		BE			AC_BE		Best Effort
+-# 3		EE			AC_BE		Best Effort
+-# 4		CL			AC_VI		Video
+-# 5		VI			AC_VI		Video
+-# 6		VO			AC_VO		Voice
+-# 7		NC			AC_VO		Voice
+-# Data frames with no priority information: AC_BE
+-# Management frames: AC_VO
+-# PS-Poll frames: AC_BE
+-
+-# Default WMM parameters (IEEE 802.11 draft; 11-03-0504-03-000e):
+-# for 802.11a or 802.11g networks
+-# These parameters are sent to WMM clients when they associate.
+-# The parameters will be used by WMM clients for frames transmitted to the
+-# access point.
+-#
+-# note - txop_limit is in units of 32microseconds
+-# note - acm is admission control mandatory flag. 0 = admission control not
+-# required, 1 = mandatory
+-# note - here cwMin and cmMax are in exponent form. the actual cw value used
+-# will be (2^n)-1 where n is the value given here
+-#
+-wme_enabled=1
+-#
+-# Low priority / AC_BK = background
+-wme_ac_bk_cwmin=4
+-wme_ac_bk_cwmax=10
+-wme_ac_bk_aifs=7
+-wme_ac_bk_txop_limit=0
+-wme_ac_bk_acm=0
+-# Note: for IEEE 802.11b mode: cWmin=5 cWmax=10
+-#
+-# Normal priority / AC_BE = best effort
+-wme_ac_be_aifs=3
+-wme_ac_be_cwmin=4
+-wme_ac_be_cwmax=10
+-wme_ac_be_txop_limit=0
+-wme_ac_be_acm=0
+-# Note: for IEEE 802.11b mode: cWmin=5 cWmax=7
+-#
+-# High priority / AC_VI = video
+-wme_ac_vi_aifs=2
+-wme_ac_vi_cwmin=3
+-wme_ac_vi_cwmax=4
+-wme_ac_vi_txop_limit=94
+-wme_ac_vi_acm=0
+-# Note: for IEEE 802.11b mode: cWmin=4 cWmax=5 txop_limit=188
+-#
+-# Highest priority / AC_VO = voice
+-wme_ac_vo_aifs=2
+-wme_ac_vo_cwmin=2
+-wme_ac_vo_cwmax=3
+-wme_ac_vo_txop_limit=47
+-wme_ac_vo_acm=0
+-# Note: for IEEE 802.11b mode: cWmin=3 cWmax=4 burst=102
++
++# Default WMM parameters (IEEE 802.11 draft; 11-03-0504-03-000e)
++wme_enabled=0
+ 
+ # Static WEP key configuration
+ #
+@@ -370,86 +251,10 @@
+ # remain asleep). Default: 65535 (no limit apart from field size)
+ #max_listen_interval=100
+ 
+-##### IEEE 802.11n related configuration ######################################
+-
+-# ieee80211n: Whether IEEE 802.11n (HT) is enabled
+-# 0 = disabled (default)
+-# 1 = enabled
+-#ieee80211n=1
+-
+-# ht_capab: HT capabilities (list of flags)
+-# LDPC coding capability: [LDPC] = supported
+-# Supported channel width set: [HT40-] = both 20 MHz and 40 MHz with secondary
+-#	channel below the primary channel; [HT40+] = both 20 MHz and 40 MHz
+-#	with secondary channel below the primary channel
+-#	(20 MHz only if neither is set)
+-#	Note: There are limits on which channels can be used with HT40- and
+-#	HT40+. Following table shows the channels that may be available for
+-#	HT40- and HT40+ use per IEEE 802.11n Annex J:
+-#	freq		HT40-		HT40+
+-#	2.4 GHz		5-13		1-7 (1-9 in Europe/Japan)
+-#	5 GHz		40,48,56,64	36,44,52,60
+-#	(depending on the location, not all of these channels may be available
+-#	for use)
+-# Spatial Multiplexing (SM) Power Save: [SMPS-STATIC] or [SMPS-DYNAMIC]
+-#	(SMPS disabled if neither is set)
+-# HT-greenfield: [GF] (disabled if not set)
+-# Short GI for 20 MHz: [SHORT-GI-20] (disabled if not set)
+-# Short GI for 40 MHz: [SHORT-GI-40] (disabled if not set)
+-# Tx STBC: [TX-STBC] (disabled if not set)
+-# Rx STBC: [RX-STBC1] (one spatial stream), [RX-STBC12] (one or two spatial
+-#	streams), or [RX-STBC123] (one, two, or three spatial streams); Rx STBC
+-#	disabled if none of these set
+-# HT-delayed Block Ack: [DELAYED-BA] (disabled if not set)
+-# Maximum A-MSDU length: [MAX-AMSDU-7935] for 7935 octets (3839 octets if not
+-#	set)
+-# DSSS/CCK Mode in 40 MHz: [DSSS_CCK-40] = allowed (not allowed if not set)
+-# PSMP support: [PSMP] (disabled if not set)
+-# L-SIG TXOP protection support: [LSIG-TXOP-PROT] (disabled if not set)
+-#ht_capab=[HT40-][SHORT-GI-20][SHORT-GI-40]
+-
+ ##### IEEE 802.1X-2004 related configuration ##################################
+ 
+-# Require IEEE 802.1X authorization
+-#ieee8021x=1
+-
+-# IEEE 802.1X/EAPOL version
+-# hostapd is implemented based on IEEE Std 802.1X-2004 which defines EAPOL
+-# version 2. However, there are many client implementations that do not handle
+-# the new version number correctly (they seem to drop the frames completely).
+-# In order to make hostapd interoperate with these clients, the version number
+-# can be set to the older version (1) with this configuration value.
+-#eapol_version=2
+-
+-# Optional displayable message sent with EAP Request-Identity. The first \0
+-# in this string will be converted to ASCII-0 (nul). This can be used to
+-# separate network info (comma separated list of attribute=value pairs); see,
+-# e.g., RFC 4284.
+-#eap_message=hello
+-#eap_message=hello\0networkid=netw,nasid=foo,portid=0,NAIRealms=example.com
+-
+-# WEP rekeying (disabled if key lengths are not set or are set to 0)
+-# Key lengths for default/broadcast and individual/unicast keys:
+-# 5 = 40-bit WEP (also known as 64-bit WEP with 40 secret bits)
+-# 13 = 104-bit WEP (also known as 128-bit WEP with 104 secret bits)
+-#wep_key_len_broadcast=5
+-#wep_key_len_unicast=5
+ # Rekeying period in seconds. 0 = do not rekey (i.e., set keys only once)
+-#wep_rekey_period=300
+-
+-# EAPOL-Key index workaround (set bit7) for WinXP Supplicant (needed only if
+-# only broadcast keys are used)
+-eapol_key_index_workaround=0
+-
+-# EAP reauthentication period in seconds (default: 3600 seconds; 0 = disable
+-# reauthentication).
+-#eap_reauth_period=3600
+-
+-# Use PAE group address (01:80:c2:00:00:03) instead of individual target
+-# address when sending EAPOL frames with driver=wired. This is the most common
+-# mechanism used in wired authentication, but it also requires that the port
+-# is only used by one station.
+-#use_pae_group_addr=1
++wep_rekey_period=0
+ 
+ ##### Integrated EAP server ###################################################
+ 
+@@ -463,107 +268,6 @@
+ # authentication server.
+ eap_server=0
+ 
+-# Path for EAP server user database
+-#eap_user_file=/etc/hostapd.eap_user
+-
+-# CA certificate (PEM or DER file) for EAP-TLS/PEAP/TTLS
+-#ca_cert=/etc/hostapd.ca.pem
+-
+-# Server certificate (PEM or DER file) for EAP-TLS/PEAP/TTLS
+-#server_cert=/etc/hostapd.server.pem
+-
+-# Private key matching with the server certificate for EAP-TLS/PEAP/TTLS
+-# This may point to the same file as server_cert if both certificate and key
+-# are included in a single file. PKCS#12 (PFX) file (.p12/.pfx) can also be
+-# used by commenting out server_cert and specifying the PFX file as the
+-# private_key.
+-#private_key=/etc/hostapd.server.prv
+-
+-# Passphrase for private key
+-#private_key_passwd=secret passphrase
+-
+-# Enable CRL verification.
+-# Note: hostapd does not yet support CRL downloading based on CDP. Thus, a
+-# valid CRL signed by the CA is required to be included in the ca_cert file.
+-# This can be done by using PEM format for CA certificate and CRL and
+-# concatenating these into one file. Whenever CRL changes, hostapd needs to be
+-# restarted to take the new CRL into use.
+-# 0 = do not verify CRLs (default)
+-# 1 = check the CRL of the user certificate
+-# 2 = check all CRLs in the certificate path
+-#check_crl=1
+-
+-# dh_file: File path to DH/DSA parameters file (in PEM format)
+-# This is an optional configuration file for setting parameters for an
+-# ephemeral DH key exchange. In most cases, the default RSA authentication does
+-# not use this configuration. However, it is possible setup RSA to use
+-# ephemeral DH key exchange. In addition, ciphers with DSA keys always use
+-# ephemeral DH keys. This can be used to achieve forward secrecy. If the file
+-# is in DSA parameters format, it will be automatically converted into DH
+-# params. This parameter is required if anonymous EAP-FAST is used.
+-# You can generate DH parameters file with OpenSSL, e.g.,
+-# "openssl dhparam -out /etc/hostapd.dh.pem 1024"
+-#dh_file=/etc/hostapd.dh.pem
+-
+-# Configuration data for EAP-SIM database/authentication gateway interface.
+-# This is a text string in implementation specific format. The example
+-# implementation in eap_sim_db.c uses this as the UNIX domain socket name for
+-# the HLR/AuC gateway (e.g., hlr_auc_gw). In this case, the path uses "unix:"
+-# prefix.
+-#eap_sim_db=unix:/tmp/hlr_auc_gw.sock
+-
+-# Encryption key for EAP-FAST PAC-Opaque values. This key must be a secret,
+-# random value. It is configured as a 16-octet value in hex format. It can be
+-# generated, e.g., with the following command:
+-# od -tx1 -v -N16 /dev/random | colrm 1 8 | tr -d ' '
+-#pac_opaque_encr_key=000102030405060708090a0b0c0d0e0f
+-
+-# EAP-FAST authority identity (A-ID)
+-# A-ID indicates the identity of the authority that issues PACs. The A-ID
+-# should be unique across all issuing servers. In theory, this is a variable
+-# length field, but due to some existing implementations required A-ID to be
+-# 16 octets in length, it is strongly recommended to use that length for the
+-# field to provided interoperability with deployed peer implementation. This
+-# field is configured in hex format.
+-#eap_fast_a_id=101112131415161718191a1b1c1d1e1f
+-
+-# EAP-FAST authority identifier information (A-ID-Info)
+-# This is a user-friendly name for the A-ID. For example, the enterprise name
+-# and server name in a human-readable format. This field is encoded as UTF-8.
+-#eap_fast_a_id_info=test server
+-
+-# Enable/disable different EAP-FAST provisioning modes:
+-#0 = provisioning disabled
+-#1 = only anonymous provisioning allowed
+-#2 = only authenticated provisioning allowed
+-#3 = both provisioning modes allowed (default)
+-#eap_fast_prov=3
+-
+-# EAP-FAST PAC-Key lifetime in seconds (hard limit)
+-#pac_key_lifetime=604800
+-
+-# EAP-FAST PAC-Key refresh time in seconds (soft limit on remaining hard
+-# limit). The server will generate a new PAC-Key when this number of seconds
+-# (or fewer) of the lifetime remains.
+-#pac_key_refresh_time=86400
+-
+-# EAP-SIM and EAP-AKA protected success/failure indication using AT_RESULT_IND
+-# (default: 0 = disabled).
+-#eap_sim_aka_result_ind=1
+-
+-# Trusted Network Connect (TNC)
+-# If enabled, TNC validation will be required before the peer is allowed to
+-# connect. Note: This is only used with EAP-TTLS and EAP-FAST. If any other
+-# EAP method is enabled, the peer will be allowed to connect without TNC.
+-#tnc=1
+-
+-
+-##### IEEE 802.11f - Inter-Access Point Protocol (IAPP) #######################
+-
+-# Interface to be used for IAPP broadcast packets
+-#iapp_interface=eth0
+-
+-
+ ##### RADIUS client configuration #############################################
+ # for IEEE 802.1X with external Authentication Server, IEEE 802.11
+ # authentication with external ACL for MAC addresses, and accounting
+@@ -571,97 +275,6 @@
+ # The own IP address of the access point (used as NAS-IP-Address)
+ own_ip_addr=127.0.0.1
+ 
+-# Optional NAS-Identifier string for RADIUS messages. When used, this should be
+-# a unique to the NAS within the scope of the RADIUS server. For example, a
+-# fully qualified domain name can be used here.
+-# When using IEEE 802.11r, nas_identifier must be set and must be between 1 and
+-# 48 octets long.
+-#nas_identifier=ap.example.com
+-
+-# RADIUS authentication server
+-#auth_server_addr=127.0.0.1
+-#auth_server_port=1812
+-#auth_server_shared_secret=secret
+-
+-# RADIUS accounting server
+-#acct_server_addr=127.0.0.1
+-#acct_server_port=1813
+-#acct_server_shared_secret=secret
+-
+-# Secondary RADIUS servers; to be used if primary one does not reply to
+-# RADIUS packets. These are optional and there can be more than one secondary
+-# server listed.
+-#auth_server_addr=127.0.0.2
+-#auth_server_port=1812
+-#auth_server_shared_secret=secret2
+-#
+-#acct_server_addr=127.0.0.2
+-#acct_server_port=1813
+-#acct_server_shared_secret=secret2
+-
+-# Retry interval for trying to return to the primary RADIUS server (in
+-# seconds). RADIUS client code will automatically try to use the next server
+-# when the current server is not replying to requests. If this interval is set,
+-# primary server will be retried after configured amount of time even if the
+-# currently used secondary server is still working.
+-#radius_retry_primary_interval=600
+-
+-
+-# Interim accounting update interval
+-# If this is set (larger than 0) and acct_server is configured, hostapd will
+-# send interim accounting updates every N seconds. Note: if set, this overrides
+-# possible Acct-Interim-Interval attribute in Access-Accept message. Thus, this
+-# value should not be configured in hostapd.conf, if RADIUS server is used to
+-# control the interim interval.
+-# This value should not be less 600 (10 minutes) and must not be less than
+-# 60 (1 minute).
+-#radius_acct_interim_interval=600
+-
+-# Dynamic VLAN mode; allow RADIUS authentication server to decide which VLAN
+-# is used for the stations. This information is parsed from following RADIUS
+-# attributes based on RFC 3580 and RFC 2868: Tunnel-Type (value 13 = VLAN),
+-# Tunnel-Medium-Type (value 6 = IEEE 802), Tunnel-Private-Group-ID (value
+-# VLANID as a string). vlan_file option below must be configured if dynamic
+-# VLANs are used. Optionally, the local MAC ACL list (accept_mac_file) can be
+-# used to set static client MAC address to VLAN ID mapping.
+-# 0 = disabled (default)
+-# 1 = option; use default interface if RADIUS server does not include VLAN ID
+-# 2 = required; reject authentication if RADIUS server does not include VLAN ID
+-#dynamic_vlan=0
+-
+-# VLAN interface list for dynamic VLAN mode is read from a separate text file.
+-# This list is used to map VLAN ID from the RADIUS server to a network
+-# interface. Each station is bound to one interface in the same way as with
+-# multiple BSSIDs or SSIDs. Each line in this text file is defining a new
+-# interface and the line must include VLAN ID and interface name separated by
+-# white space (space or tab).
+-#vlan_file=/etc/hostapd.vlan
+-
+-# Interface where 802.1q tagged packets should appear when a RADIUS server is
+-# used to determine which VLAN a station is on.  hostapd creates a bridge for
+-# each VLAN.  Then hostapd adds a VLAN interface (associated with the interface
+-# indicated by 'vlan_tagged_interface') and the appropriate wireless interface
+-# to the bridge.
+-#vlan_tagged_interface=eth0
+-
+-
+-##### RADIUS authentication server configuration ##############################
+-
+-# hostapd can be used as a RADIUS authentication server for other hosts. This
+-# requires that the integrated EAP server is also enabled and both
+-# authentication services are sharing the same configuration.
+-
+-# File name of the RADIUS clients configuration for the RADIUS server. If this
+-# commented out, RADIUS server is disabled.
+-#radius_server_clients=/etc/hostapd.radius_clients
+-
+-# The UDP port number for the RADIUS authentication server
+-#radius_server_auth_port=1812
+-
+-# Use IPv6 with RADIUS server (IPv4 will also be supported using IPv6 API)
+-#radius_server_ipv6=1
+-
+-
+ ##### WPA/IEEE 802.11i configuration ##########################################
+ 
+ # Enable WPA. Setting this variable configures the AP to require WPA (either
+@@ -713,7 +326,7 @@
+ 
+ # Time interval for rekeying GTK (broadcast/multicast encryption keys) in
+ # seconds. (dot11RSNAConfigGroupRekeyTime)
+-#wpa_group_rekey=600
++wpa_group_rekey=0
+ 
+ # Rekey GTK when any STA that possesses the current GTK is leaving the BSS.
+ # (dot11RSNAConfigGroupRekeyStrict)
+@@ -721,138 +334,11 @@
+ 
+ # Time interval for rekeying GMK (master key used internally to generate GTKs
+ # (in seconds).
+-#wpa_gmk_rekey=86400
++wpa_gmk_rekey=0
+ 
+ # Maximum lifetime for PTK in seconds. This can be used to enforce rekeying of
+ # PTK to mitigate some attacks against TKIP deficiencies.
+-#wpa_ptk_rekey=600
+-
+-# Enable IEEE 802.11i/RSN/WPA2 pre-authentication. This is used to speed up
+-# roaming be pre-authenticating IEEE 802.1X/EAP part of the full RSN
+-# authentication and key handshake before actually associating with a new AP.
+-# (dot11RSNAPreauthenticationEnabled)
+-#rsn_preauth=1
+-#
+-# Space separated list of interfaces from which pre-authentication frames are
+-# accepted (e.g., 'eth0' or 'eth0 wlan0wds0'. This list should include all
+-# interface that are used for connections to other APs. This could include
+-# wired interfaces and WDS links. The normal wireless data interface towards
+-# associated stations (e.g., wlan0) should not be added, since
+-# pre-authentication is only used with APs other than the currently associated
+-# one.
+-#rsn_preauth_interfaces=eth0
+-
+-# peerkey: Whether PeerKey negotiation for direct links (IEEE 802.11e) is
+-# allowed. This is only used with RSN/WPA2.
+-# 0 = disabled (default)
+-# 1 = enabled
+-#peerkey=1
+-
+-# ieee80211w: Whether management frame protection (MFP) is enabled
+-# 0 = disabled (default)
+-# 1 = optional
+-# 2 = required
+-#ieee80211w=0
+-
+-# Association SA Query maximum timeout (in TU = 1.024 ms; for MFP)
+-# (maximum time to wait for a SA Query response)
+-# dot11AssociationSAQueryMaximumTimeout, 1...4294967295
+-#assoc_sa_query_max_timeout=1000
+-
+-# Association SA Query retry timeout (in TU = 1.024 ms; for MFP)
+-# (time between two subsequent SA Query requests)
+-# dot11AssociationSAQueryRetryTimeout, 1...4294967295
+-#assoc_sa_query_retry_timeout=201
+-
+-
+-# okc: Opportunistic Key Caching (aka Proactive Key Caching)
+-# Allow PMK cache to be shared opportunistically among configured interfaces
+-# and BSSes (i.e., all configurations within a single hostapd process).
+-# 0 = disabled (default)
+-# 1 = enabled
+-#okc=1
+-
+-
+-##### IEEE 802.11r configuration ##############################################
+-
+-# Mobility Domain identifier (dot11FTMobilityDomainID, MDID)
+-# MDID is used to indicate a group of APs (within an ESS, i.e., sharing the
+-# same SSID) between which a STA can use Fast BSS Transition.
+-# 2-octet identifier as a hex string.
+-#mobility_domain=a1b2
+-
+-# PMK-R0 Key Holder identifier (dot11FTR0KeyHolderID)
+-# 1 to 48 octet identifier.
+-# This is configured with nas_identifier (see RADIUS client section above).
+-
+-# Default lifetime of the PMK-RO in minutes; range 1..65535
+-# (dot11FTR0KeyLifetime)
+-#r0_key_lifetime=10000
+-
+-# PMK-R1 Key Holder identifier (dot11FTR1KeyHolderID)
+-# 6-octet identifier as a hex string.
+-#r1_key_holder=000102030405
+-
+-# Reassociation deadline in time units (TUs / 1.024 ms; range 1000..65535)
+-# (dot11FTReassociationDeadline)
+-#reassociation_deadline=1000
+-
+-# List of R0KHs in the same Mobility Domain
+-# format: <MAC address> <NAS Identifier> <128-bit key as hex string>
+-# This list is used to map R0KH-ID (NAS Identifier) to a destination MAC
+-# address when requesting PMK-R1 key from the R0KH that the STA used during the
+-# Initial Mobility Domain Association.
+-#r0kh=02:01:02:03:04:05 r0kh-1.example.com 000102030405060708090a0b0c0d0e0f
+-#r0kh=02:01:02:03:04:06 r0kh-2.example.com 00112233445566778899aabbccddeeff
+-# And so on.. One line per R0KH.
+-
+-# List of R1KHs in the same Mobility Domain
+-# format: <MAC address> <R0KH-ID> <128-bit key as hex string>
+-# This list is used to map R1KH-ID to a destination MAC address when sending
+-# PMK-R1 key from the R0KH. This is also the list of authorized R1KHs in the MD
+-# that can request PMK-R1 keys.
+-#r1kh=02:01:02:03:04:05 02:11:22:33:44:55 000102030405060708090a0b0c0d0e0f
+-#r1kh=02:01:02:03:04:06 02:11:22:33:44:66 00112233445566778899aabbccddeeff
+-# And so on.. One line per R1KH.
+-
+-# Whether PMK-R1 push is enabled at R0KH
+-# 0 = do not push PMK-R1 to all configured R1KHs (default)
+-# 1 = push PMK-R1 to all configured R1KHs whenever a new PMK-R0 is derived
+-#pmk_r1_push=1
+-
+-##### Passive scanning ########################################################
+-# Scan different channels every N seconds. 0 = disable passive scanning.
+-#passive_scan_interval=60
+-
+-# Listen N usecs on each channel when doing passive scanning.
+-# This value plus the time needed for changing channels should be less than
+-# 32 milliseconds (i.e. 32000 usec) to avoid interruptions to normal
+-# operations. Time needed for channel changing varies based on the used wlan
+-# hardware.
+-# default: disabled (0)
+-#passive_scan_listen=10000
+-
+-# Passive scanning mode:
+-# 0 = scan all supported modes (802.11a/b/g/Turbo) (default)
+-# 1 = scan only the mode that is currently used for normal operations
+-#passive_scan_mode=1
+-
+-# Maximum number of entries kept in AP table (either for passive scanning or
+-# for detecting Overlapping Legacy BSS Condition). The oldest entry will be
+-# removed when adding a new entry that would make the list grow over this
+-# limit. Note! Wi-Fi certification for IEEE 802.11g requires that OLBC is
+-# enabled, so this field should not be set to 0 when using IEEE 802.11g.
+-# default: 255
+-#ap_table_max_size=255
+-
+-# Number of seconds of no frames received after which entries may be deleted
+-# from the AP table. Since passive scanning is not usually performed frequently
+-# this should not be set to very small value. In addition, there is no
+-# guarantee that every scan cycle will receive beacon frames from the
+-# neighboring APs.
+-# default: 60
+-#ap_table_expiration_time=3600
+-
++wpa_ptk_rekey=0
+ 
+ ##### Wi-Fi Protected Setup (WPS) #############################################
+ 
+@@ -992,33 +478,4 @@
+ # 12-digit, all-numeric code that identifies the consumer package.
+ #upc=123456789012
+ 
+-##### Multiple BSSID support ##################################################
+-#
+-# Above configuration is using the default interface (wlan#, or multi-SSID VLAN
+-# interfaces). Other BSSIDs can be added by using separator 'bss' with
+-# default interface name to be allocated for the data packets of the new BSS.
+-#
+-# hostapd will generate BSSID mask based on the BSSIDs that are
+-# configured. hostapd will verify that dev_addr & MASK == dev_addr. If this is
+-# not the case, the MAC address of the radio must be changed before starting
+-# hostapd (ifconfig wlan0 hw ether <MAC addr>).
+-#
+-# BSSIDs are assigned in order to each BSS, unless an explicit BSSID is
+-# specified using the 'bssid' parameter.
+-# If an explicit BSSID is specified, it must be chosen such that it:
+-# - results in a valid MASK that covers it and the dev_addr
+-# - is not the same as the MAC address of the radio
+-# - is not the same as any other explicitly specified BSSID
+-#
+-# Please note that hostapd uses some of the values configured for the first BSS
+-# as the defaults for the following BSSes. However, it is recommended that all
+-# BSSes include explicit configuration of all relevant configuration items.
+-#
+-#bss=wlan0_0
+-#ssid=test2
+-# most of the above items can be used here (apart from radio interface specific
+-# items, like channel)
+-
+-#bss=wlan0_1
+-#bssid=00:13:10:95:fe:0b
+ # ...
+diff -Naur hostapd-0.6.9/hostapd/hostapd.h hostapd/hostapd/hostapd.h
+--- hostapd-0.6.9/hostapd/hostapd.h	2009-03-23 16:06:28.000000000 +0200
++++ hostapd/hostapd/hostapd.h	2010-02-23 14:39:26.001490000 +0200
+@@ -234,5 +234,10 @@
+ void hostapd_new_assoc_sta(struct hostapd_data *hapd, struct sta_info *sta,
+ 			   int reassoc);
+ int hostapd_reload_config(struct hostapd_iface *iface);
++void hostapd_wpa_auth_disconnect(void *ctx, const u8 *addr, u16 reason);
++int hostapd_reset_iface(struct hostapd_iface *iface, const char *config_fname, int deauth_stas);
++int hostapd_reconfig_iface(struct hostapd_iface *iface);
++int hostapd_stop_iface_driver(struct hostapd_iface *iface);
++int hostapd_start_iface(struct hostapd_iface *iface, const char *config_file);
+ 
+ #endif /* HOSTAPD_H */
+diff -Naur hostapd-0.6.9/hostapd/hostapd_cli.c hostapd/hostapd/hostapd_cli.c
+--- hostapd-0.6.9/hostapd/hostapd_cli.c	2009-03-23 16:06:28.000000000 +0200
++++ hostapd/hostapd/hostapd_cli.c	2010-02-23 14:39:26.000920000 +0200
+@@ -18,6 +18,7 @@
+ #include "wpa_ctrl.h"
+ #include "common.h"
+ #include "version.h"
++#include "hostapd_cli.h"
+ 
+ 
+ static const char *hostapd_cli_version =
+@@ -94,12 +95,15 @@
+ "   interface [ifname]   show interfaces/select interface\n"
+ "   level <debug level>  change debug level\n"
+ "   license              show full hostapd_cli license\n"
++"   reset				 reset the AP(and reload its config file)\n"
++"	stop				 stop the AP\n"
++"   start                start the AP\n" 
+ "   quit                 exit hostapd_cli\n";
+ 
+ static struct wpa_ctrl *ctrl_conn;
+ static int hostapd_cli_quit = 0;
+ static int hostapd_cli_attached = 0;
+-static const char *ctrl_iface_dir = "/var/run/hostapd";
++static const char *ctrl_iface_dir = "/tmp";
+ static char *ctrl_ifname = NULL;
+ static int ping_interval = 5;
+ 
+@@ -131,6 +135,7 @@
+ 	char *cfile;
+ 	int flen;
+ 
++   
+ 	if (ifname == NULL)
+ 		return NULL;
+ 
+@@ -206,6 +211,14 @@
+ }
+ 
+ 
++#ifndef CONFIG_NO_TI
++static int hostapd_cli_cmd_reload_acl(struct wpa_ctrl *ctrl, int argc, char *argv[])
++{
++	return wpa_ctrl_command(ctrl, "RELOAD_ACL");
++}
++#endif
++
++
+ static int hostapd_cli_cmd_mib(struct wpa_ctrl *ctrl, int argc, char *argv[])
+ {
+ 	return wpa_ctrl_command(ctrl, "MIB");
+@@ -350,6 +363,29 @@
+ 	return 0;
+ }
+ 
++static int hostapd_cli_cmd_reset(struct wpa_ctrl *ctrl, int argc, char *argv[])
++{
++	return wpa_ctrl_command(ctrl, "RECONFIG");
++}
++
++static int hostapd_cli_cmd_stop(struct wpa_ctrl *ctrl, int argc, char *argv[])
++{
++	return wpa_ctrl_command(ctrl, "STOP");
++}
++
++static int hostapd_cli_cmd_start(struct wpa_ctrl *ctrl, int argc, char *argv[])
++{
++	char cmd[256];
++	printf("argc=%d\n", argc);
++	if (argc != 1) {
++		printf("Invalid START command: needs one argument (config "
++		       "file name)\n");
++		return 0;
++	}
++	snprintf(cmd, sizeof(cmd), "START %s", argv[0]);
++
++	return wpa_ctrl_command(ctrl, cmd);
++}
+ 
+ static int hostapd_cli_cmd_level(struct wpa_ctrl *ctrl, int argc, char *argv[])
+ {
+@@ -422,6 +458,9 @@
+ 
+ static struct hostapd_cli_cmd hostapd_cli_commands[] = {
+ 	{ "ping", hostapd_cli_cmd_ping },
++#ifndef CONFIG_NO_TI
++	{ "reload_acl", hostapd_cli_cmd_reload_acl },
++#endif
+ 	{ "mib", hostapd_cli_cmd_mib },
+ 	{ "sta", hostapd_cli_cmd_sta },
+ 	{ "all_sta", hostapd_cli_cmd_all_sta },
+@@ -438,6 +477,9 @@
+ 	{ "level", hostapd_cli_cmd_level },
+ 	{ "license", hostapd_cli_cmd_license },
+ 	{ "quit", hostapd_cli_cmd_quit },
++	{ "reset", hostapd_cli_cmd_reset},
++	{ "stop", hostapd_cli_cmd_stop},
++	{ "start", hostapd_cli_cmd_start},
+ 	{ NULL, NULL }
+ };
+ 
+@@ -449,12 +491,15 @@
+ 
+ 	count = 0;
+ 	cmd = hostapd_cli_commands;
+-	while (cmd->cmd) {
+-		if (strncasecmp(cmd->cmd, argv[0], strlen(argv[0])) == 0) {
+-			match = cmd;
+-			count++;
+-		}
+-		cmd++;
++
++	while (cmd->cmd) 
++    {
++        if (strncasecmp(cmd->cmd, argv[0], strlen(argv[0])) == 0) 
++        {
++            match = cmd;
++            count++;
++        }
++        cmd++;
+ 	}
+ 
+ 	if (count > 1) {
+@@ -574,6 +619,98 @@
+ 	alarm(ping_interval);
+ }
+ 
++/* New methods to be used by driver wlan_cu application (CLI) */
++
++
++void HostapdCLI_PrintCommands()
++{
++    int i =0 ;
++
++    for (i = 0 ;i < HOSTAPD_CLI_CMD_LAST ; i++)
++    {
++        printf("%d. %s => %s",i+1 , tCmdsNames[i].cmdName, tCmdsNames[i].cmdDescription); 
++    }
++}
++
++int HostapdCLI_RunCommand(const char *ctrl_interface, THostapdCLICmd *pCmd)
++{
++    int     argc = 1, i=0 ;
++    char*   argv[MAX_PARAMS_IN_CMD];
++
++    ctrl_ifname = strdup(ctrl_interface);
++
++    printf(" ctrl_ifname = %s. cmd = %d \n", ctrl_ifname, pCmd->eCmdType);
++    ctrl_conn = hostapd_cli_open_connection(ctrl_ifname);
++
++    if (ctrl_conn)
++    {
++         printf("\n Connection with Hostapd established.\n");
++    }
++    else
++    {
++        perror("\n Error! Failed to connect to hostapd \n");
++        return -1;
++    }
++
++    argv[0] = malloc(MAX_CMD_NAME_SIZE);
++    memcpy(argv[0], tCmdsNames[pCmd->eCmdType].cmdName , MAX_CMD_NAME_SIZE);
++
++	signal(SIGINT, hostapd_cli_terminate);
++	signal(SIGTERM, hostapd_cli_terminate);
++	signal(SIGALRM, hostapd_cli_alarm);
++
++    switch (pCmd->eCmdType)
++    {
++#ifndef CONFIG_NO_TI
++    case HOSTAPD_CLI_CMD_RELOAD_ACL:
++#endif
++    case HOSTAPD_CLI_CMD_PING:
++    case HOSTAPD_CLI_CMD_MIB:
++    case HOSTAPD_CLI_CMD_ALL_STA:
++	case HOSTAPD_CLI_CMD_WPS_PBC:
++	case HOSTAPD_CLI_CMD_RESET:
++	case HOSTAPD_CLI_CMD_STOP:
++        break;
++	case HOSTAPD_CLI_CMD_START:
++		argv[1] = malloc(MAX_FILENAME_SIZE);
++		memcpy(argv[1], pCmd->u.tCmdStart.config_fname , MAX_FILENAME_SIZE);
++		argc = 2;
++        break;
++    case HOSTAPD_CLI_CMD_STA:
++    case HOSTAPD_CLI_CMD_NEW_STA:
++	case HOSTAPD_CLI_CMD_SA_QUERY:
++
++       argv[1] = malloc(MAX_ADDRESS_SIZE);
++       memcpy(argv[1], pCmd->u.tCmdSta.address , MAX_ADDRESS_SIZE);
++       argc = 2;
++       break;
++    case HOSTAPD_CLI_CMD_WPS_PIN:
++        argv[1] = malloc(MAX_PIN_SIZE);
++        memcpy(argv[1], pCmd->u.tCmdWPSPin.pin , MAX_PIN_SIZE);
++        argv[2] = malloc(MAX_ADDRESS_SIZE);
++        memcpy(argv[2], pCmd->u.tCmdWPSPin.uuid , MAX_UUID_SIZE);
++        argc = 3;
++        break;
++    default:
++        printf("Error!, Command number %d is not legal!!!", pCmd->eCmdType);
++    }
++
++    printf("\n Sending Command: name=%s, argc=%d \n" ,argv[0], argc);
++	wpa_request(ctrl_conn, argc, &argv[0]);
++
++	free(ctrl_ifname);
++
++    for (i = 0 ; i < argc ; i++)
++    {
++        free(argv[i]);
++    }
++	hostapd_cli_close_connection();
++
++	return 0;
++}
++
++
++#ifndef TI_HOSTAPD_CLI_LIB
+ 
+ int main(int argc, char *argv[])
+ {
+@@ -671,3 +808,5 @@
+ 	hostapd_cli_close_connection();
+ 	return 0;
+ }
++
++#endif
+diff -Naur hostapd-0.6.9/hostapd/hostapd_cli.h hostapd/hostapd/hostapd_cli.h
+--- hostapd-0.6.9/hostapd/hostapd_cli.h	1970-01-01 02:00:00.000000000 +0200
++++ hostapd/hostapd/hostapd_cli.h	2010-02-23 14:39:26.000433000 +0200
+@@ -0,0 +1,110 @@
++/*
++ * hostapd / IEEE 802.11 Management: Beacon and Probe Request/Response
++ * Copyright (c) 2002-2004, Instant802 Networks, Inc.
++ * Copyright (c) 2005-2006, Devicescape Software, Inc.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * Alternatively, this software may be distributed under the terms of BSD
++ * license.
++ *
++ * See README and COPYING for more details.
++ */
++
++
++#ifndef HOSTAPD_CLI_H
++#define HOSTAPD_CLI_H
++
++
++#define MAX_ADDRESS_SIZE    20
++#define MAX_UUID_SIZE       56
++#define MAX_PIN_SIZE        56
++#define MAX_CMD_NAME_SIZE   20
++#define MAX_CMD_DESCRIPTION_SIZE 150
++#define MAX_FILENAME_SIZE	80
++
++#define MAX_PARAMS_IN_CMD   10
++
++
++typedef struct
++{
++    char cmdName[MAX_CMD_NAME_SIZE];
++    char cmdDescription[MAX_CMD_DESCRIPTION_SIZE];
++} TCmdInfo;
++
++
++typedef enum
++{
++    HOSTAPD_CLI_CMD_PING = 0,
++    HOSTAPD_CLI_CMD_MIB,
++    HOSTAPD_CLI_CMD_STA,
++    HOSTAPD_CLI_CMD_ALL_STA,
++    HOSTAPD_CLI_CMD_NEW_STA,
++    HOSTAPD_CLI_CMD_SA_QUERY,
++    HOSTAPD_CLI_CMD_WPS_PIN,
++    HOSTAPD_CLI_CMD_WPS_PBC,
++	HOSTAPD_CLI_CMD_RESET,
++	HOSTAPD_CLI_CMD_STOP,
++	HOSTAPD_CLI_CMD_START,
++#ifndef CONFIG_NO_TI          
++	HOSTAPD_CLI_CMD_RELOAD_ACL,
++#endif
++    HOSTAPD_CLI_CMD_LAST
++} EHostapdCLICmds;
++
++
++static TCmdInfo tCmdsNames[HOSTAPD_CLI_CMD_LAST] =
++{
++    {"ping",    "Get MIB variables (dot1x, dot11, radius)\n"},              /* HOSTAPD_CLI_CMD_PING */
++    {"mib",     "Get MIB variables for one station\n"},                     /* HOSTAPD_CLI_CMD_MIB */
++    {"sta",     "Get MIB variables for one station (Param: <addr>)\n"},     /* HOSTAPD_CLI_CMD_STA */
++    {"all_sta", "Get MIB variables for all stations\n"},                    /* HOSTAPD_CLI_CMD_ALL_STA */
++    {"new_sta", "Add a new station (Param0: <addr>)\n"},                    /* HOSTAPD_CLI_CMD_NEW_STA */
++    {"sa_query","Send SA Query to a station (Param: <addr>)\n"},            /* HOSTAPD_CLI_CMD_SA_QUERY */
++    {"wps_pin", "Add WPS Enrollee PIN (Param: <uuid> <pin>)\n"},            /* HOSTAPD_CLI_CMD_WPS_PIN */
++    {"wps_pbc", "indicate button pushed to initiate PBC \n"},               /* HOSTAPD_CLI_CMD_WPS_PBC */
++    {"reset",   "Reload config file and reset the AP\n"},	                /* HOSTAPD_CLI_CMD_RESET */
++    {"stop",    "Stop the AP\n"},							                /* HOSTAPD_CLI_CMD_STOP */
++    {"start",   "Start the AP <config filename>\n"},		                /* HOSTAPD_CLI_CMD_START */
++#ifndef CONFIG_NO_TI
++	{"reload_acl", "reload acl configuration \n"}                           /* HOSTAPD_CLI_CMD_RELOAD_ACL */
++#endif
++};
++
++typedef struct
++{
++    char config_fname[MAX_FILENAME_SIZE];
++}TCmdStart;
++
++typedef struct
++{
++    char address[MAX_ADDRESS_SIZE];
++}TCmdSta;
++
++
++typedef struct
++{
++    char uuid[MAX_UUID_SIZE];
++    char pin[MAX_PIN_SIZE];
++}TCmdWPSPin;
++
++
++typedef struct
++{
++    EHostapdCLICmds eCmdType;
++
++    union
++    {
++		TCmdStart   tCmdStart;
++        TCmdSta     tCmdSta;
++        TCmdWPSPin  tCmdWPSPin;
++    } u;
++} THostapdCLICmd;
++
++
++void HostapdCLI_PrintCommands();
++int HostapdCLI_RunCommand(const char *ctrl_interface, THostapdCLICmd *pCmd);
++
++#endif /* HOSTAPD_CLI_H */
+diff -Naur hostapd-0.6.9/hostapd/regulatory.c hostapd/hostapd/regulatory.c
+--- hostapd-0.6.9/hostapd/regulatory.c	1970-01-01 02:00:00.000000000 +0200
++++ hostapd/hostapd/regulatory.c	2010-02-23 14:39:26.001520000 +0200
+@@ -0,0 +1,458 @@
++/*
++ * regulatory.c
++ *
++ * Copyright 2001-2010 Texas Instruments, Inc. - http://www.ti.com/
++ * 
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ * 
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ * 
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and  
++ * limitations under the License.
++ */
++
++/** \file regulatory.c
++ *  \brief Regulatory domain implementation
++ * 
++ *  \see regulatory.h
++ */
++#include "includes.h"
++#include "hostapd.h"
++#include "driver.h"
++#include "ieee802_1x.h"
++#include "eloop.h"
++#include "ieee802_11.h"
++#include "sta_info.h"
++#include "config.h"
++#include "hw_features.h"
++#include "APExternalIf.h"
++#include "regulatory.h"
++
++/********************************************************************************/
++/*						Internal definition.					        		*/
++/********************************************************************************/
++typedef enum
++{
++ REG_USA_INDEX,
++ REG_JAPAN_INDEX,
++ REG_EUROPE_INDEX,
++ REG_ALL_INDEX,
++ REG_TI_INDEX,
++ REG_MAX_INDEX
++}ERegIndex;
++
++#define DEFAULT_24_FREQ       2407
++#define DEFAULT_5_FREQ        5000
++
++#define MAX_CHAN_NUM            15
++#define MAX_CLASS_NUM           10
++#define MAX_NUM_OF_REGION        4
++#define DBM_TO_TX_POWER_FACTOR  10
++
++
++static int RateATbl[] = {60};
++static int RateGTbl[] = {10,20,55,110,60,90,120,180,240,360,480,540};
++static int RateBTbl[] = {10,20,55,110};
++
++typedef enum
++{
++    DOT11_B_MODE    = 1,
++    DOT11_A_MODE    = 2,
++    DOT11_G_MODE    = 3,
++    DOT11_DUAL_MODE = 4,
++    DOT11_N_MODE    = 5,
++
++    DOT11_MAX_MODE
++
++} Dot11Mode;
++
++typedef struct
++{
++char  MinClass;
++char  MaxClass;
++char  NumChan;
++char  TxPower;
++unsigned short Freq;
++char  Channel[MAX_CHAN_NUM];
++}RegDomainChanPerClass_t;
++
++typedef struct
++{
++char                     CountryStr[3];
++RegDomainChanPerClass_t  DomainReg[MAX_CLASS_NUM];
++}RegDomainInfo_t;
++
++
++RegDomainInfo_t RegDomainTbl[4] = {
++                                  {{"US"}, /* Country*/
++                                  {{1,1,4,30,5000,{36,40,44,48,0,0,0,0,0,0,0,0,0,0,0}}, /* min class, max class, num of channel,to power, base freq, channel list*/
++                                  {2,2,4,23,5000,{52,56,60,64,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {3,3,4,29,5000,{149,153,157,161,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {4,4,11,23,5000,{100,104,108,112,116,120,124,128,132,136,140,0,0,0,0}},
++                                  {5,5,5,30,5000,{149,153,157,161,165,0,0,0,0,0,0,0,0,0,0}},
++                                  {10,10,2,20,4850,{20,25,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {11,11,2,33,4850,{20,25,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {12,12,11,30,2407,{1,2,3,4,5,6,7,8,9,10,11,0,0,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}}},
++                                  {{"JP"},
++                                  {{1,1,4,13,5000,{34,38,42,46,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {2,6,3,13,5000,{8,12,16,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {7,11,4,13,4000,{184,188,192,196,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {30,30,13,13,2407,{1,2,3,4,5,6,7,8,9,10,11,12,13,0,0}},
++                                  {31,31,1,13,2414,{14,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {32,32,4,13,5000,{52,56,60,64,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}}},
++                                  {{"RST"},
++                                  {{1,1,4,23,5000,{36,40,44,46,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {2,2,4,23,5000,{52,56,60,64,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {3,3,11,30,5000,{100,104,108,112,116,120,124,128,132,136,140,0,0,0,0}},
++                                  {4,4,13,20,2407,{1,2,3,4,5,6,7,8,9,10,11,12,13,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}}},
++                                  {{""},
++                                  {{100,100,11,13,2407,{1,2,3,4,5,6,7,8,9,10,11,12,13,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},
++                                  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}}}
++                                  };
++
++
++/********************************************************************************/
++/*						Internal functions prototypes.							*/
++/********************************************************************************/
++
++static int  regulatory_FillChanByCountry(TApChanData  *pChanInfo, char *channelString,int country,int numOfchan,int BaseFreq,int MaxTxPower);
++static void regulatory_build_mode_G_hw_capability(RegDomainStruct_t *pRegHandle,TApChanData  *pChanInfo,int NumOfChan,int IfaceIdx);
++static void regulatory_build_mode_A_hw_capability(RegDomainStruct_t *pRegHandle,TApChanData  *pChanInfo,int NumOfChan,int IfaceIdx);
++static void regulatory_build_mode_B_hw_capability(RegDomainStruct_t *pRegHandle,TApChanData  *pChanInfo,int NumOfChan,int IfaceIdx);
++
++/************************************************************************
++ *                        regulatory_create				*
++ ************************************************************************
++DESCRIPTION: create reg domain handle
++				                                                                                                   
++INPUT:      
++************************************************************************/
++RegDomainStruct_t *regulatory_create(void)
++{
++ RegDomainStruct_t *pRegDomain;
++
++  pRegDomain = os_zalloc(sizeof(RegDomainStruct_t));
++   if (pRegDomain == NULL )
++   {
++     wpa_printf(MSG_ERROR, "%s: allocation failed", __func__);
++     return NULL;
++   }
++
++    pRegDomain->modes = os_zalloc( NUM_HOSTAPD_MODES * sizeof(struct hostapd_hw_modes));
++    if (pRegDomain->modes == NULL)
++    {
++        free(pRegDomain);
++        wpa_printf(MSG_ERROR, "%s: allocation failed", __func__);
++        return NULL;
++
++    }
++  return pRegDomain;
++}
++
++/************************************************************************
++ *                        regulatory_build_hw_capability				*
++ ************************************************************************
++DESCRIPTION: builds regulatory domain table 
++				                                                                                                   
++INPUT:      pChanStruct - pointer to channel info structure		
++
++************************************************************************/
++void regulatory_build_hw_capability(RegDomainStruct_t *pRegHandle ,TApChanHwInfo *pChanStruct,char current_channel)
++{
++ int country;
++ unsigned char MaxTxPower = pChanStruct->MaxtxPower/DBM_TO_TX_POWER_FACTOR;
++ int index;
++ TApChanData  *pChanInfo;
++
++ if (pChanStruct->mode == AP_DOT11_DUAL_MODE)
++   pRegHandle->NumOfModes = 2;
++ else
++   pRegHandle->NumOfModes = 1;
++
++ if (!strncmp(pChanStruct->cCountry,"US",2))
++     country  = REG_USA_INDEX;
++ else
++ if (!strncmp(pChanStruct->cCountry,"JP",2))
++    country  = REG_JAPAN_INDEX;
++ else
++  if (!strncmp(pChanStruct->cCountry,"TI",2))
++     country  = REG_TI_INDEX;
++  else
++   if (!strncmp(pChanStruct->cCountry,"",1))
++     country  = REG_ALL_INDEX;
++  else
++    country  = REG_EUROPE_INDEX;
++
++ wpa_printf(MSG_DEBUG, "%s: Country=%c%c indx=%d", __func__, pChanStruct->cCountry[0], pChanStruct->cCountry[1], country );
++
++ switch (pChanStruct->mode)
++ {
++ case DOT11_A_MODE:
++            pChanInfo = os_zalloc(pChanStruct->numOfAChan * sizeof(TApChanData));
++            if (pChanInfo == NULL) {
++                wpa_printf(MSG_ERROR, "%s: allocation failed", __func__);
++                return;
++            }
++            index = regulatory_FillChanByCountry(pChanInfo,pChanStruct->ChanAstr,country,pChanStruct->numOfAChan,DEFAULT_5_FREQ,MaxTxPower);
++            regulatory_build_mode_A_hw_capability(pRegHandle,pChanInfo,index,0);
++            free(pChanInfo);
++      break;
++
++ case DOT11_G_MODE:
++           pChanInfo = os_zalloc(pChanStruct->numOfGChan * sizeof(TApChanData));
++           if (pChanInfo == NULL) {
++               wpa_printf(MSG_ERROR, "%s: allocation failed", __func__);
++               return;
++           }
++           index = regulatory_FillChanByCountry(pChanInfo,pChanStruct->ChanGstr,country,pChanStruct->numOfGChan,DEFAULT_24_FREQ,MaxTxPower);
++           if (current_channel == 14)/*the rates on channel 14 is B rates only*/
++             regulatory_build_mode_B_hw_capability(pRegHandle,pChanInfo,index,0);   
++           else
++             regulatory_build_mode_G_hw_capability(pRegHandle,pChanInfo,index,0);
++
++           free(pChanInfo);
++         break;
++
++ case DOT11_DUAL_MODE:
++          pChanInfo = os_zalloc(pChanStruct->numOfGChan * sizeof(TApChanData));
++          if (pChanInfo == NULL) {
++               wpa_printf(MSG_ERROR, "%s: allocation failed", __func__);
++               return;
++          }
++          index = regulatory_FillChanByCountry(pChanInfo,pChanStruct->ChanGstr,country,pChanStruct->numOfGChan,DEFAULT_24_FREQ,MaxTxPower);
++           if (current_channel == 14)/*the rates on channel 14 is B rates only*/
++             regulatory_build_mode_B_hw_capability(pRegHandle,pChanInfo,index,0);   
++           else
++             regulatory_build_mode_G_hw_capability(pRegHandle,pChanInfo,index,0);
++
++          free(pChanInfo);
++
++          pChanInfo = os_zalloc(pChanStruct->numOfAChan * sizeof(TApChanData));
++          if (pChanInfo == NULL) {
++              wpa_printf(MSG_ERROR, "%s: allocation failed", __func__);
++              return;
++          }
++          index = regulatory_FillChanByCountry(pChanInfo,pChanStruct->ChanAstr,country,pChanStruct->numOfAChan,DEFAULT_5_FREQ,MaxTxPower);
++          regulatory_build_mode_A_hw_capability(pRegHandle,pChanInfo,index,1);
++          free(pChanInfo);
++     
++      break;
++
++ default:
++     wpa_printf(MSG_ERROR, "%s: illegal Dot11 mode ", __func__);
++ }
++}
++
++
++/************************************************************************
++ *                        regulatory_FillChanByCountry									*
++ ************************************************************************
++DESCRIPTION: finds and returns channel index by country code
++				                                                                                                   
++INPUT:      pointer to channel table
++
++RETURN:     channel index
++
++************************************************************************/
++static int regulatory_FillChanByCountry(TApChanData  *pChanInfo, char *channelString,int country,int numOfchan,int BaseFreq,int MaxTxPower)
++{
++int classId,chan;
++int index=0;
++int i,found;
++
++
++  for (i=0; i<numOfchan;i++ )
++  {
++   found = 0;
++     if (country  == REG_TI_INDEX)
++     {
++      pChanInfo[index].chan = channelString[i];
++      pChanInfo[index].freq = BaseFreq + 5 * pChanInfo[index].chan;
++      pChanInfo[index].max_tx_power = MaxTxPower;
++      index++;
++     }
++     else
++     {
++       for (classId = 0;(classId < MAX_CLASS_NUM && !found);classId++) 
++       {
++        for (chan = 0;chan<MAX_CHAN_NUM;chan++)
++        {
++          if (RegDomainTbl[country].DomainReg[classId].Channel[chan] == channelString[i])
++         {
++          pChanInfo[index].chan = channelString[i];
++          pChanInfo[index].freq = RegDomainTbl[country].DomainReg[classId].Freq + 5 * pChanInfo[index].chan;
++          pChanInfo[index].max_tx_power = RegDomainTbl[country].DomainReg[classId].TxPower;
++          index++;
++          found = 1;
++         }
++        }
++       }
++     }
++    
++  }
++  
++  return index;
++}
++
++/************************************************************************
++ *                        regulatory_build_mode_A_hw_capability									*
++ ************************************************************************
++DESCRIPTION: build mode A hw capability 
++				                                                                                                   
++INPUT:      support channel list    
++
++RETURN:     
++
++************************************************************************/
++static void regulatory_build_mode_A_hw_capability(RegDomainStruct_t *pRegHandle,TApChanData *pChanInfo,int NumOfChan,int IfaceIdx )
++{
++int NumOfARate = sizeof(RateATbl)/ sizeof(RateATbl[0]);
++int i;
++
++  pRegHandle->modes[IfaceIdx].mode = HOSTAPD_MODE_IEEE80211A;
++  pRegHandle->modes[IfaceIdx].num_channels = NumOfChan;
++  pRegHandle->modes[IfaceIdx].num_rates = NumOfARate;
++  pRegHandle->modes[IfaceIdx].channels = os_zalloc(sizeof(struct hostapd_channel_data) * (pRegHandle->modes[IfaceIdx].num_channels)) ;
++  pRegHandle->modes[IfaceIdx].rates = os_zalloc(sizeof(struct hostapd_rate_data) * (pRegHandle->modes[IfaceIdx].num_rates));
++      if (pRegHandle->modes[IfaceIdx].channels == NULL || pRegHandle->modes[IfaceIdx].rates == NULL) {
++          wpa_printf(MSG_ERROR, "%s: allocation failed ", __func__);
++          hostapd_free_hw_features(pRegHandle->modes, pRegHandle->NumOfModes);
++	      return ;
++      }
++
++   for (i=0;i<NumOfChan;i++)
++   {
++    pRegHandle->modes[IfaceIdx].channels[i].chan = pChanInfo[i].chan;
++    pRegHandle->modes[IfaceIdx].channels[i].freq = pChanInfo[i].freq ;
++    pRegHandle->modes[IfaceIdx].channels[i].max_tx_power = pChanInfo[i].max_tx_power;
++    pRegHandle->modes[IfaceIdx].channels[i].flag = 0;
++   }
++
++/* TBD A mode Rates */
++    for (i=0;i<NumOfARate;i++)
++    {
++     pRegHandle->modes[IfaceIdx].rates[i].rate = RateATbl[i];
++   	 pRegHandle->modes[IfaceIdx].rates[i].flags = HOSTAPD_RATE_BASIC | HOSTAPD_RATE_SUPPORTED |HOSTAPD_RATE_MANDATORY;
++    }
++}
++
++/************************************************************************
++ *                        regulatory_build_mode_G_hw_capability									*
++ ************************************************************************
++DESCRIPTION: build mode A hw capability 
++				                                                                                                   
++INPUT:      support channel list    
++
++RETURN:     
++
++************************************************************************/
++static void regulatory_build_mode_G_hw_capability(RegDomainStruct_t *pRegHandle,TApChanData  *pChanInfo,int NumOfChan,int IfaceIdx)
++{
++ int NumOfGRate = sizeof(RateGTbl)/ sizeof(RateGTbl[0]);
++ int i;
++
++  pRegHandle->modes[IfaceIdx].mode = HOSTAPD_MODE_IEEE80211G;
++  pRegHandle->modes[IfaceIdx].num_channels = NumOfChan;
++  pRegHandle->modes[IfaceIdx].num_rates = NumOfGRate;
++  pRegHandle->modes[IfaceIdx].channels = os_zalloc(sizeof(struct hostapd_channel_data) * (pRegHandle->modes[IfaceIdx].num_channels)) ;
++  pRegHandle->modes[IfaceIdx].rates = os_zalloc(sizeof(struct hostapd_rate_data) * (pRegHandle->modes[IfaceIdx].num_rates));
++  if (pRegHandle->modes[IfaceIdx].channels == NULL || pRegHandle->modes[IfaceIdx].rates == NULL) {
++     wpa_printf(MSG_ERROR, "%s: allocation failed ", __func__);
++	 hostapd_free_hw_features(pRegHandle->modes, pRegHandle->NumOfModes);
++	 return ;
++  }
++
++  for (i=0;i<NumOfChan;i++)
++   {
++    pRegHandle->modes[IfaceIdx].channels[i].chan = pChanInfo[i].chan;
++    pRegHandle->modes[IfaceIdx].channels[i].freq = pChanInfo[i].freq ;
++    pRegHandle->modes[IfaceIdx].channels[i].max_tx_power = pChanInfo[i].max_tx_power;
++    pRegHandle->modes[IfaceIdx].channels[i].flag = 0;
++   }
++
++  for (i=0;i<NumOfGRate;i++)
++  {
++    pRegHandle->modes[IfaceIdx].rates[i].rate = RateGTbl[i];
++    pRegHandle->modes[IfaceIdx].rates[i].flags = HOSTAPD_RATE_BASIC | HOSTAPD_RATE_SUPPORTED | HOSTAPD_RATE_CCK | HOSTAPD_RATE_MANDATORY;
++  }
++}
++
++/************************************************************************
++ *                        regulatory_build_mode_B_hw_capability									*
++ ************************************************************************
++DESCRIPTION: build mode B hw capability 
++				                                                                                                   
++INPUT:      support channel list    
++
++RETURN:     
++
++************************************************************************/
++static void regulatory_build_mode_B_hw_capability(RegDomainStruct_t *pRegHandle,TApChanData  *pChanInfo,int NumOfChan,int IfaceIdx)
++{
++ int NumOfBRate = sizeof(RateBTbl)/ sizeof(RateBTbl[0]);
++ int i;
++
++  pRegHandle->modes[IfaceIdx].mode = HOSTAPD_MODE_IEEE80211G;
++  pRegHandle->modes[IfaceIdx].num_channels = NumOfChan;
++  pRegHandle->modes[IfaceIdx].num_rates = NumOfBRate;
++  pRegHandle->modes[IfaceIdx].channels = os_zalloc(sizeof(struct hostapd_channel_data) * (pRegHandle->modes[IfaceIdx].num_channels)) ;
++  pRegHandle->modes[IfaceIdx].rates = os_zalloc(sizeof(struct hostapd_rate_data) * (pRegHandle->modes[IfaceIdx].num_rates));
++  if (pRegHandle->modes[IfaceIdx].channels == NULL || pRegHandle->modes[IfaceIdx].rates == NULL) {
++     wpa_printf(MSG_ERROR, "%s: allocation failed ", __func__);
++	 hostapd_free_hw_features(pRegHandle->modes, pRegHandle->NumOfModes);
++	 return ;
++  }
++
++  for (i=0;i<NumOfChan;i++)
++   {
++    pRegHandle->modes[IfaceIdx].channels[i].chan = pChanInfo[i].chan;
++    pRegHandle->modes[IfaceIdx].channels[i].freq = pChanInfo[i].freq ;
++    pRegHandle->modes[IfaceIdx].channels[i].max_tx_power = pChanInfo[i].max_tx_power;
++    pRegHandle->modes[IfaceIdx].channels[i].flag = 0;
++   }
++
++  for (i=0;i<NumOfBRate;i++)
++  {
++    pRegHandle->modes[IfaceIdx].rates[i].rate = RateBTbl[i];
++    pRegHandle->modes[IfaceIdx].rates[i].flags = HOSTAPD_RATE_BASIC | HOSTAPD_RATE_SUPPORTED | HOSTAPD_RATE_CCK | HOSTAPD_RATE_MANDATORY;
++  }
++}
++
++
++
++void regulatory_destroy (RegDomainStruct_t *pRegHandle)
++{
++ int i;
++ 
++ if (pRegHandle)
++ {
++	 free(pRegHandle);
++ }
++
++}
++
+diff -Naur hostapd-0.6.9/hostapd/regulatory.h hostapd/hostapd/regulatory.h
+--- hostapd-0.6.9/hostapd/regulatory.h	1970-01-01 02:00:00.000000000 +0200
++++ hostapd/hostapd/regulatory.h	2010-02-23 14:39:26.000503000 +0200
+@@ -0,0 +1,40 @@
++/*
++ * regulatory.h
++ *
++ * Copyright 2001-2010 Texas Instruments, Inc. - http://www.ti.com/
++ * 
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ * 
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ * 
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and  
++ * limitations under the License.
++ */
++
++/** \file regulatory.h
++ *  \brief regulatory interface 
++ *
++ */
++
++#include "hw_features.h"
++
++typedef struct 
++{
++ struct hostapd_hw_modes *modes;
++ int                      NumOfModes;
++}RegDomainStruct_t;
++
++RegDomainStruct_t *regulatory_create(void);
++
++void regulatory_build_hw_capability(RegDomainStruct_t *pRegHandle ,TApChanHwInfo *pChanStruct,char current_channel);
++
++struct hostapd_hw_modes *regulatory_get_hw_capability(unsigned short *num_modes, unsigned short *flags);
++
++void regulatory_destroy (RegDomainStruct_t *pRegHandle);
++
++

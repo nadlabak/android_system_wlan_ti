@@ -1,0 +1,13 @@
+rm /tmp/tiwlan*
+insmod ./sdio.ko
+insmod ./tiap_drv.ko
+./tiwlan_loader -f firmware_ap.bin
+ifconfig tiwlan0 10.1.14.1 netmask 255.255.255.0  up
+sleep 1
+./hostapd -dd ./hostapd.conf &
+udhcpd /tiwlan/udhcpdWlan.conf
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+
+
+

@@ -1,0 +1,7 @@
+killall -9 udhcpd
+killall -9 hostapd
+ifconfig tiwlan0 down
+rmmod tiap_drv
+rmmod sdio
+
+
