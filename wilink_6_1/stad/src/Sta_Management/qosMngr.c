@@ -1766,7 +1766,8 @@ TI_STATUS qosMngr_setSite(TI_HANDLE hQosMngr, assocRsp_t *assocRsp)
 			{
                 pQosMngr->activeProtocol = QOS_NONE;
                 TRACE0(pQosMngr->hReport, REPORT_SEVERITY_ERROR, "qosMngr_setSite: setting active protocol QOS_WME params with non QOS_WME IE params frame, setting active protocol back to NONE \n");
-                return TI_NOK;
+                status = qosMngr_setSite(hQosMngr, assocRsp);
+                return status;
 			}
 
             status = setWmeSiteParams(pQosMngr, (TI_UINT8 *)assocRsp->WMEParams);

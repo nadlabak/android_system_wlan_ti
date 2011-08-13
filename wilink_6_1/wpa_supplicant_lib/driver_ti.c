@@ -738,6 +738,24 @@ static int wpa_driver_tista_driver_get_max_rate(void *priv)
 }
 //END IKMAPFOUR-47
 
+// BEGIN e13358 11/12/2010 IKSTABLETWOV-3519 auto arp support
+static int wpa_driver_tista_set_driver_ip(void *priv, u32 ip)
+{
+	struct wpa_driver_ti_data *drv = (struct wpa_driver_ti_data *)priv;
+	u32 staIp;
+	int res;
+
+	staIp = ip;
+	res = wpa_driver_tista_private_send(priv, SITE_MGR_SET_WLAN_IP_PARAM,
+		&ip, 4, NULL, 0);
+	if (0 != res)
+		wpa_printf(MSG_ERROR, "ERROR - Failed to set driver ip!");
+	else
+		wpa_printf(MSG_DEBUG, "%s success", __func__);
+
+	return res;
+}
+// END IKSTABLETWOV-3519
 
 /*-----------------------------------------------------------------------------
 Routine Name: wpa_driver_tista_driver_cmd
@@ -1017,6 +1035,15 @@ static int wpa_driver_tista_driver_cmd( void *priv, char *cmd, char *buf, size_t
 			}
 		}
 	}
+	// BEGIN e13358 11/12/2010 IKSTABLETWOV-3519 auto arp support
+	else if( os_strncasecmp(cmd, "setip",5) == 0 ) {
+		u32 staIp;
+
+		staIp = (u32)atoi(cmd + 5);
+		wpa_printf(MSG_DEBUG,"setip command = %u", staIp);
+		ret = wpa_driver_tista_set_driver_ip( priv, staIp );
+	}
+	// END IKSTABLETWOV-3519
 	else {
 		wpa_printf(MSG_DEBUG,"Unsupported command");
 	}

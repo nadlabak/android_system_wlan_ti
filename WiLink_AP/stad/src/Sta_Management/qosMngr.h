@@ -163,6 +163,7 @@ typedef struct
 
     /* PS Rx streaming parameters */
     TPsRxStreaming      aTidPsRxStreaming[MAX_NUM_OF_802_1d_TAGS];/* Per TID PS-Rx-Streaming configured parameters */
+    TPsRxStreaming      AutoRxStreaming;                    /* auto rx streaming configured parameters*/
     TI_UINT32           uNumEnabledPsRxStreams;             /* the number of enabled TID-PS-Rx-Streams */
 
     /* traffic admission control parameters */

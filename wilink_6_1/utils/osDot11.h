@@ -56,9 +56,9 @@
 
 #define OS_802_11_SSID_JUNK(str,len)                   \
         ((len) > 2 &&                                  \
-         (str)[0] < OS_802_11_SSID_FIRST_VALID_CHAR && \
-         (str)[1] < OS_802_11_SSID_FIRST_VALID_CHAR && \
-         (str)[2] < OS_802_11_SSID_FIRST_VALID_CHAR)
+         (unsigned char)(str)[0] < OS_802_11_SSID_FIRST_VALID_CHAR && \
+         (unsigned char)(str)[1] < OS_802_11_SSID_FIRST_VALID_CHAR && \
+         (unsigned char)(str)[2] < OS_802_11_SSID_FIRST_VALID_CHAR)
 
 
 /**/

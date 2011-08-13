@@ -229,6 +229,8 @@ TI_STATUS TrafficMonitor_Stop(TI_HANDLE hTrafficMonitor)
     
     if (pTrafficMonitor->Active) /*To prevent double call to timer stop*/
     {
+        if (pTrafficMonitor->DownTimerEnabled)
+            os_wake_unlock(pTrafficMonitor->hOs);
     
         pTrafficMonitor->Active = TI_FALSE;  
    

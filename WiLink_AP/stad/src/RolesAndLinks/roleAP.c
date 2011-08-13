@@ -1726,7 +1726,7 @@ static void BssStartCompleteCb(TI_HANDLE hRoleAP)
 	{
 		TRACE1(pRoleAP->hReport, REPORT_SEVERITY_ERROR, 
 		   "%s: Failed to update link state, for Global link\n",__FUNCTION__);
-		return;
+//		return;
 	}
     /* Set link state to OPEN and to prevent error, go through state MGMT */
     txMgmtQ_SetLinkState(pRoleAP->hTxMgmtQ, pRoleAP->uGlobalHlid, TX_CONN_STATE_MGMT);

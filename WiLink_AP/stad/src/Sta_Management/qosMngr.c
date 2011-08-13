@@ -249,6 +249,7 @@ TI_STATUS qosMngr_SetDefaults (TI_HANDLE hQosMngr, QosMngrInitParams_t *pQosMngr
     pQosMngr->uDesireCwMin = pQosMngrInitParams->uDesireCwMin;
     pQosMngr->uDesireCwMax = pQosMngrInitParams->uDesireCwMax;
 	pQosMngr->bEnableBurstMode = pQosMngrInitParams->bEnableBurstMode;
+	pQosMngr->AutoRxStreaming.uStreamPeriod = 20;
 
 
     pQosMngr->activeProtocol    = QOS_NONE;
@@ -396,6 +397,10 @@ TI_STATUS qosMngr_SetDefaults (TI_HANDLE hQosMngr, QosMngrInitParams_t *pQosMngr
         pQosMngr->aTidPsRxStreaming[uTid].bEnabled = TI_FALSE;
     }
     pQosMngr->uNumEnabledPsRxStreams = 0;
+
+	pQosMngr->AutoRxStreaming.bEnabled = TI_TRUE;
+	pQosMngr->AutoRxStreaming.uTid = 0;
+	pQosMngr->AutoRxStreaming.uTxTimeout = 0;
 
 	/* update Tx header convert mode */
 	txCtrlParams_setQosHeaderConverMode(pQosMngr->hTxCtrl, HDR_CONVERT_LEGACY);
@@ -2971,4 +2976,14 @@ static void qosMngr_storeTspecCandidateParams (tspecInfo_t *pCandidateParams, OS
 	pCandidateParams->minimumPHYRate = pTSPECParams->uMinimumPHYRate;
 	pCandidateParams->streamDirection = BI_DIRECTIONAL;
 	pCandidateParams->mediumTime = 0;
+}
+
+void qosMngr_SetMotrxStreaming(TI_HANDLE hQosMngr, TI_BOOL bEnable)
+{
+    qosMngr_t *pQosMngr = (qosMngr_t *)hQosMngr;
+
+	if (bEnable)
+		TWD_CfgPsRxStreaming(pQosMngr->hTWD,&pQosMngr->AutoRxStreaming,NULL,NULL);
+	else
+		TWD_CfgPsRxStreaming(pQosMngr->hTWD,&pQosMngr->aTidPsRxStreaming[0],NULL,NULL);
 }
