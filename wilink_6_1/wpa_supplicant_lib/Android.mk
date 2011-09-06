@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-ifneq ($(WIFI_WPA_SUPPLICANT_VERSION),v0.5.11)
 LOCAL_PATH := $(call my-dir)
 
 # This makefile is only included if BOARD_WLAN_TI_STA_DK_ROOT is set,
@@ -24,6 +23,26 @@ endif
 ifeq ($(TARGET_SIMULATOR),true)
   $(error This makefile must not be included when building the simulator)
 endif
+
+ifndef WPA_SUPPLICANT_VERSION
+WPA_SUPPLICANT_VERSION := VER_0_5_X
+endif
+
+ifeq ($(WPA_SUPPLICANT_VERSION),VER_0_5_X)
+WPA_SUPPL_DIR = external/wpa_supplicant
+else
+WPA_SUPPL_DIR = external/wpa_supplicant_6/wpa_supplicant
+endif
+WPA_SUPPL_DIR_INCLUDE = $(WPA_SUPPL_DIR)
+ifeq ($(WPA_SUPPLICANT_VERSION),VER_0_6_X)
+WPA_SUPPL_DIR_INCLUDE += $(WPA_SUPPL_DIR)/src \
+       $(WPA_SUPPL_DIR)/src/common \
+       $(WPA_SUPPL_DIR)/src/drivers \
+       $(WPA_SUPPL_DIR)/src/l2_packet \
+       $(WPA_SUPPL_DIR)/src/utils \
+       $(WPA_SUPPL_DIR)/src/wps
+endif
+
 
 DK_ROOT = $(BOARD_WLAN_TI_STA_DK_ROOT)
 OS_ROOT = $(DK_ROOT)/platforms
@@ -36,7 +55,8 @@ CUDK	= $(DK_ROOT)/CUDK
 LIB	= ../../lib
 TI_SUPP_LIB_DIR = external/wpa_supplicant_6/wpa_supplicant
 
-include $(TI_SUPP_LIB_DIR)/.config
+# include $(TI_SUPP_LIB_DIR)/.config
+include $(WPA_SUPPL_DIR)/.config
 
 # To force sizeof(enum) = 4
 ifneq ($(TARGET_SIMULATOR),true)
@@ -56,6 +76,7 @@ INCLUDES = $(STAD)/Export_Inc \
 	$(CUDK)/configurationutility/inc \
 	$(CUDK)/os/common/inc \
 	external/openssl/include \
+	$(WPA_SUPPL_DIR_INCLUDE) \
 	$(DK_ROOT)/../lib \
 	$(TI_SUPP_LIB_DIR) \
 	$(TI_SUPP_LIB_DIR)/src \
@@ -65,7 +86,13 @@ INCLUDES = $(STAD)/Export_Inc \
 	$(TI_SUPP_LIB_DIR)/src/utils
 
 L_CFLAGS += -DCONFIG_DRIVER_CUSTOM -DHOST_COMPILE -D__BYTE_ORDER_LITTLE_ENDIAN
-OBJS = driver_ti.c scanmerge.c $(LIB)/shlist.c
+L_CFLAGS += -DWPA_SUPPLICANT_$(WPA_SUPPLICANT_VERSION)
+OBJS = driver_ti.c $(LIB)/scanmerge.c $(LIB)/shlist.c
+
+# To force sizeof(enum) = 4
+ifneq ($(TARGET_SIMULATOR),true)
+L_CFLAGS += -mabi=aapcs-linux
+endif
 
 ifdef CONFIG_NO_STDOUT_DEBUG
 L_CFLAGS += -DCONFIG_NO_STDOUT_DEBUG
@@ -101,4 +128,3 @@ LOCAL_C_INCLUDES := $(INCLUDES)
 include $(BUILD_STATIC_LIBRARY)
 
 ########################
-endif #ifneq ($(WIFI_WPA_SUPPLICANT_VERSION),v0.5.11)

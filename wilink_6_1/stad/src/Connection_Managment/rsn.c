@@ -630,6 +630,7 @@ TI_STATUS rsn_stop (TI_HANDLE hRsn, TI_BOOL removeKeys)
     if (removeKeys)
     {   /* reset PMKID list if exist */
         pRsn->pAdmCtrl->resetPmkidList (pRsn->pAdmCtrl);
+        rsn_clearGenInfoElement(pRsn);
     }
 
     return status;
@@ -1475,22 +1476,20 @@ TI_STATUS rsn_getInfoElement(TI_HANDLE hRsn, TI_UINT8 *pRsnIe, TI_UINT32 *pRsnIe
     pRsn = (rsn_t*)hRsn;
 
     if (!pRsn->bRsnExternalMode) 
-		{
+    {
+        status = pRsn->pAdmCtrl->getInfoElement (pRsn->pAdmCtrl, pRsnIe, &ie_len);
+        TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_getInfoElement pRsnIeLen= %d\n",*pRsnIeLen);
+        if ( status != TI_OK ) {
+            TRACE0(pRsn->hReport, REPORT_SEVERITY_ERROR, "rsn_getInfoElement() - pAdmCtrl->getInfoElement() returned error. Returning. \n");
+            return status;
+        }
+    }
+    else
+    {    /* LiorC: We assume the generic IE should be set only in external mode */
+         status = rsn_getGenInfoElement(hRsn, pRsnIe, &ie_len);
+    }
 
-			status = pRsn->pAdmCtrl->getInfoElement (pRsn->pAdmCtrl, pRsnIe, &ie_len);
-		
-			TRACE1(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_getInfoElement pRsnIeLen= %d\n",*pRsnIeLen);
-		
-			if ( status != TI_OK ) {
-				return status;   
-			}
-		
-			pRsnIe += ie_len;
-		}
-
-    status = rsn_getGenInfoElement(hRsn, pRsnIe, pRsnIeLen);
-
-    *pRsnIeLen += ie_len;
+    *pRsnIeLen = ie_len;
 
     return status;
 
@@ -2368,7 +2367,9 @@ TI_STATUS rsn_getGenInfoElement(rsn_t *pRsn, TI_UINT8 *out_buff, TI_UINT32 *out_
  */
 void rsn_clearGenInfoElement(rsn_t *pRsn )
 {
-		/*pRsn->genericIE.length = 0; */
+    TRACE0(pRsn->hReport, REPORT_SEVERITY_INFORMATION, "rsn_clearGenInfoElement: clearing Generic IE \n");
+    os_memoryZero(pRsn->hOs, &pRsn->genericIE, sizeof(pRsn->genericIE));
+    /*pRsn->genericIE.length = 0; */
 }
 
 
