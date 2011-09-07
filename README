@@ -1,0 +1,42 @@
+# execute this script in root of motorola kernel
+
+# steps required : 
+#   Edit target/board/generic/BoardConfig.mk
+#   and set wifi parameters :
+
+# Wifi related defines
+# BOARD_WPA_SUPPLICANT_DRIVER := CUSTOM
+# BOARD_WPA_SUPPLICANT_PRIVATE_LIB := libCustomWifi
+# BOARD_WLAN_DEVICE := tiwlan0
+# BOARD_WLAN_TI_STA_DK_ROOT := system/wlan/ti/wilink_6_1
+# WIFI_DRIVER_MODULE_PATH     := "/system/lib/modules/tiwlan_drv.ko"
+# WIFI_DRIVER_MODULE_ARG      := ""
+# WIFI_DRIVER_MODULE_NAME     := "tiwlan_drv"
+# WIFI_FIRMWARE_LOADER        := "wlan_loader"
+# WPA_SUPPLICANT_VERSION := VER_0_6_X
+
+# then :
+
+    export PLATFORM_DIR=$(pwd)
+    export ARCH=arm
+    export CROSS_COMPILE=arm-eabi-
+    export TARGET_OUT_INTERMEDIATES=out
+    export JAVA_HOME=/usr/lib/jvm/java-6-sun
+    export BOARD_USES_QCOM_HARDWARE=true
+    export PATH=$PLATFORM_DIR/prebuilt/linux-x86/toolchain/arm-eabi-4.2.1/bin:$JAVA_HOME/bin:$PATH
+
+    cd $PLATFORM_DIR
+    . build/envsetup.sh
+    choosecombo 1 1 generic eng
+
+# cleanup
+cd system/wlan/ti
+find . | grep "\.o" | xargs rm
+
+# build modules
+cd $PLATFORM_DIR
+make MOTO_PREBUILT_DIR= tiwlan_drv
+cp system/wlan/ti/wilink_6_1/platforms/os/linux/tiwlan_drv.ko ./
+
+make MOTO_PREBUILT_DIR= tiap_drv
+cp system/wlan/ti/WiLink_AP/platforms/os/linux/tiap_drv.ko ./
