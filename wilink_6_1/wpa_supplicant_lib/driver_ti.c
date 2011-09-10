@@ -874,9 +874,8 @@ static int wpa_driver_tista_driver_cmd( void *priv, char *cmd, char *buf, size_t
 	else if( os_strcasecmp(cmd, "rssi-approx") == 0 ) {
 		struct wpa_scan_res *cur_res;
 		struct wpa_supplicant *wpa_s = (struct wpa_supplicant *)(drv->ctx);
-		struct scan_ssid_t *p_ssid;
 		int rssi, len;
-//131	const u8 *ie;
+		const u8 *ie;
 
 		wpa_printf(MSG_DEBUG,"rssi-approx command");
 
@@ -884,18 +883,6 @@ static int wpa_driver_tista_driver_cmd( void *priv, char *cmd, char *buf, size_t
 			return( ret );
 		cur_res = scan_get_by_bssid( drv, wpa_s->bssid );
 		if( cur_res ) {
-//144
-			p_ssid = scan_get_ssid(cur_res);
-			if( p_ssid ) {
-				len = (int)(p_ssid->ssid_len);
-				rssi = cur_res->level;
-				if( (len > 0) && (len <= MAX_SSID_LEN) && (len < (int)buf_len)) {
-					os_memcpy((void *)buf, (void *)(p_ssid->ssid), len);
-					ret = len;
-					ret += snprintf(&buf[ret], buf_len-len, " rssi %d\n", rssi);
-				}
-			}
-/* 131
 			ie = wpa_scan_get_ie(cur_res, WLAN_EID_SSID);
 			len = (int)(ie?ie[1]:0);
 			rssi = cur_res->level;
@@ -904,7 +891,6 @@ static int wpa_driver_tista_driver_cmd( void *priv, char *cmd, char *buf, size_t
 				ret = len;
 				ret += snprintf(&buf[ret], buf_len-len, " rssi %d\n", rssi);
 			}
-*/
 		}
 	}
 	else if( os_strcasecmp(cmd, "rssi") == 0 ) {
@@ -1436,27 +1422,6 @@ static int wpa_driver_tista_set_key(void *priv, wpa_alg alg,
 	return ret;
 }
 
-//for 144
-static int wpa_driver_tista_set_gen_ie(void *priv, const u8 *ie, size_t ie_len)
-{
-	struct wpa_driver_ti_data *drv = priv;
-	struct iwreq iwr;
-	int ret = 0;
-
-	os_memset(&iwr, 0, sizeof(iwr));
-	os_strncpy(iwr.ifr_name, drv->ifname, IFNAMSIZ);
-	iwr.u.data.pointer = (caddr_t)ie;
-	iwr.u.data.length = ie_len;
-
-	wpa_printf(MSG_INFO, "%s", __func__);
-
-	if (ioctl(drv->ioctl_sock, SIOCSIWGENIE, &iwr) < 0) {
-		perror("ioctl[SIOCSIWGENIE]");
-		ret = -1;
-	}
-	return ret;
-}
-
 /*-----------------------------------------------------------------------------
 Compare function for sorting scan results. Return >0 if @b is considered better.
 -----------------------------------------------------------------------------*/
@@ -1493,40 +1458,21 @@ static int wpa_driver_tista_associate(void *priv,
 	int allow_unencrypted_eapol;
 	int value, flags;
 
-	wpa_printf(MSG_DEBUG, "%s", __FUNCTION__);
-	TI_CHECK_DRIVER( drv->driver_is_loaded, -1 );
-
-#ifdef WPA_SUPPLICANT_VER_0_6_X
-#ifdef ANDROID
-	((struct wpa_driver_wext_data *)(drv->wext))->skip_disconnect = 0;
-#endif
-#endif
-
+        TI_CHECK_DRIVER( drv->driver_is_loaded, -1 );
 	if (wpa_driver_wext_get_ifflags(drv->wext, &flags) == 0) {
 		if (!(flags & IFF_UP)) {
 			wpa_driver_wext_set_ifflags(drv->wext, flags | IFF_UP);
 		}
 	}
-#ifdef WPA_SUPPLICANT_VER_0_5_X
 	/* Set driver network mode (Adhoc/Infrastructure) according to supplied parameters */
 	wpa_driver_wext_set_mode(drv->wext, params->mode);
-#endif
-
-	//144
-	wpa_driver_tista_set_gen_ie(drv, params->wpa_ie, params->wpa_ie_len);
 
 	if (params->wpa_ie == NULL || params->wpa_ie_len == 0)
 		value = IW_AUTH_WPA_VERSION_DISABLED;
-#ifdef WPA_SUPPLICANT_VER_0_6_X
 	else if (params->wpa_ie[0] == WLAN_EID_RSN)
-#else
-	else if (params->wpa_ie[0] == RSN_INFO_ELEM)
-#endif
 		value = IW_AUTH_WPA_VERSION_WPA2;
-#ifdef CONFIG_WPS
 	else if (params->key_mgmt_suite == KEY_MGMT_WPS)
 		value = IW_AUTH_WPA_VERSION_DISABLED;
-#endif
 	else
 		value = IW_AUTH_WPA_VERSION_WPA;
 	wpa_driver_tista_set_auth_param(drv, IW_AUTH_WPA_VERSION, value);
@@ -1539,11 +1485,7 @@ static int wpa_driver_tista_associate(void *priv,
 	value = params->key_mgmt_suite != KEY_MGMT_NONE ||
 		params->pairwise_suite != CIPHER_NONE ||
 		params->group_suite != CIPHER_NONE ||
-#ifdef WPA_SUPPLICANT_VER_0_6_X
-		(params->wpa_ie_len && (params->key_mgmt_suite != KEY_MGMT_WPS));
-#else
 		params->wpa_ie_len;
-#endif
 	wpa_driver_tista_set_auth_param(drv, IW_AUTH_PRIVACY_INVOKED, value);
 
 	/* Allow unencrypted EAPOL messages even if pairwise keys are set when
