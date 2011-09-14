@@ -871,29 +871,7 @@ static int wpa_driver_tista_driver_cmd( void *priv, char *cmd, char *buf, size_t
 			}
 		}
 	}
-	else if( os_strcasecmp(cmd, "rssi-approx") == 0 ) {
-		struct wpa_scan_res *cur_res;
-		struct wpa_supplicant *wpa_s = (struct wpa_supplicant *)(drv->ctx);
-		int rssi, len;
-		const u8 *ie;
-
-		wpa_printf(MSG_DEBUG,"rssi-approx command");
-
-		if( !wpa_s )
-			return( ret );
-		cur_res = scan_get_by_bssid( drv, wpa_s->bssid );
-		if( cur_res ) {
-			ie = wpa_scan_get_ie(cur_res, WLAN_EID_SSID);
-			len = (int)(ie?ie[1]:0);
-			rssi = cur_res->level;
-			if( (len > 0) && (len <= MAX_SSID_LEN) && (len < (int)buf_len)) {
-				os_memcpy( (void *)buf, (void *)(ie+2), len );
-				ret = len;
-				ret += snprintf(&buf[ret], buf_len-len, " rssi %d\n", rssi);
-			}
-		}
-	}
-	else if( os_strcasecmp(cmd, "rssi") == 0 ) {
+	else if( os_strncasecmp(cmd, "rssi", 4) == 0 ) {
 		u8 ssid[MAX_SSID_LEN];
 		struct wpa_scan_res *cur_res;
 		struct wpa_supplicant *wpa_s = (struct wpa_supplicant *)(drv->ctx);
@@ -920,6 +898,29 @@ static int wpa_driver_tista_driver_cmd( void *priv, char *cmd, char *buf, size_t
 			else {
 				wpa_printf(MSG_DEBUG, "Fail to get ssid when reporting rssi");
 				ret = -1;
+			}
+		}
+	}
+        /* rssi-approx is now handled by rssi above, so the following block is not used anymore */
+	else if( os_strcasecmp(cmd, "rssi-approx") == 0 ) {
+		struct wpa_scan_res *cur_res;
+		struct wpa_supplicant *wpa_s = (struct wpa_supplicant *)(drv->ctx);
+		int rssi, len;
+		const u8 *ie;
+
+		wpa_printf(MSG_DEBUG,"rssi-approx command");
+
+		if( !wpa_s )
+			return( ret );
+		cur_res = scan_get_by_bssid( drv, wpa_s->bssid );
+		if( cur_res ) {
+			ie = wpa_scan_get_ie(cur_res, WLAN_EID_SSID);
+			len = (int)(ie?ie[1]:0);
+			rssi = cur_res->level;
+			if( (len > 0) && (len <= MAX_SSID_LEN) && (len < (int)buf_len)) {
+				os_memcpy( (void *)buf, (void *)(ie+2), len );
+				ret = len;
+				ret += snprintf(&buf[ret], buf_len-len, " rssi %d\n", rssi);
 			}
 		}
 	}
