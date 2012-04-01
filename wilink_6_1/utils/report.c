@@ -69,7 +69,7 @@ TI_HANDLE report_Create (TI_HANDLE hOs)
 
 #ifdef PRINTF_ROLLBACK
 
-	/* Fill the files names table */
+    /* Fill the files names table */
 
     os_memoryCopy(hOs, (void *)(pReport->aFileName[FILE_ID_0  ]),  "timer                   "  ,  sizeof("timer                   "));
     os_memoryCopy(hOs, (void *)(pReport->aFileName[FILE_ID_1  ]),  "measurementMgr          "  ,  sizeof("measurementMgr          "));
@@ -213,15 +213,15 @@ TI_HANDLE report_Create (TI_HANDLE hOs)
 
 #endif  /* PRINTF_ROLLBACK */
 
-	/* Severity table description */
+    /* Severity table description */
 
-	os_memoryCopy(hOs, (char *)(pReport->aSeverityDesc[REPORT_SEVERITY_INIT]),              "INIT", sizeof("INIT"));
-	os_memoryCopy(hOs, (char *)(pReport->aSeverityDesc[REPORT_SEVERITY_INFORMATION]),       "INFORMATION", sizeof("INFORMATION"));
-	os_memoryCopy(hOs, (char *)(pReport->aSeverityDesc[REPORT_SEVERITY_WARNING]),           "WARNING", sizeof("WARNING"));
-	os_memoryCopy(hOs, (char *)(pReport->aSeverityDesc[REPORT_SEVERITY_ERROR]),             "ERROR", sizeof("ERROR"));
-	os_memoryCopy(hOs, (char *)(pReport->aSeverityDesc[REPORT_SEVERITY_FATAL_ERROR]),       "FATAL_ERROR", sizeof("FATAL_ERROR"));
-	os_memoryCopy(hOs, (char *)(pReport->aSeverityDesc[REPORT_SEVERITY_SM]),                "SM", sizeof("SM"));
-	os_memoryCopy(hOs, (char *)(pReport->aSeverityDesc[REPORT_SEVERITY_CONSOLE]),           "CONSOLE", sizeof("CONSOLE"));
+    os_memoryCopy(hOs, (char *)(pReport->aSeverityDesc[REPORT_SEVERITY_INIT]),              "INIT", sizeof("INIT"));
+    os_memoryCopy(hOs, (char *)(pReport->aSeverityDesc[REPORT_SEVERITY_INFORMATION]),       "INFORMATION", sizeof("INFORMATION"));
+    os_memoryCopy(hOs, (char *)(pReport->aSeverityDesc[REPORT_SEVERITY_WARNING]),           "WARNING", sizeof("WARNING"));
+    os_memoryCopy(hOs, (char *)(pReport->aSeverityDesc[REPORT_SEVERITY_ERROR]),             "ERROR", sizeof("ERROR"));
+    os_memoryCopy(hOs, (char *)(pReport->aSeverityDesc[REPORT_SEVERITY_FATAL_ERROR]),       "FATAL_ERROR", sizeof("FATAL_ERROR"));
+    os_memoryCopy(hOs, (char *)(pReport->aSeverityDesc[REPORT_SEVERITY_SM]),                "SM", sizeof("SM"));
+    os_memoryCopy(hOs, (char *)(pReport->aSeverityDesc[REPORT_SEVERITY_CONSOLE]),           "CONSOLE", sizeof("CONSOLE"));
 
     return (TI_HANDLE)pReport;
 }
@@ -231,14 +231,13 @@ TI_HANDLE report_Create (TI_HANDLE hOs)
  ************************************************************************/
 TI_STATUS report_SetDefaults (TI_HANDLE hReport, TReportInitParams *pInitParams)
 {
-	if( (NULL == hReport) || (NULL == pInitParams))
-	{
-		return TI_NOK;
-	}
+    if ((NULL == hReport) || (NULL == pInitParams)) {
+        return TI_NOK;
+    }
 
     report_SetReportFilesTable (hReport, (TI_UINT8 *)pInitParams->aFileEnable);
     report_SetReportSeverityTable (hReport, (TI_UINT8 *)pInitParams->aSeverityTable);
-    
+
     return TI_OK;
 }
 
@@ -249,10 +248,9 @@ TI_STATUS report_Unload (TI_HANDLE hReport)
 {
     TReport *pReport = (TReport *)hReport;
 
-	if(NULL == pReport)
-	{
-		return TI_NOK;
-	}
+    if (NULL == pReport) {
+        return TI_NOK;
+    }
 
 #if defined(TIWLN_WINCE30) && defined(TI_DBG)
     closeMyFile();
@@ -265,10 +263,9 @@ TI_STATUS report_Unload (TI_HANDLE hReport)
 
 TI_STATUS report_SetReportModule(TI_HANDLE hReport, TI_UINT8 module_index)
 {
-	if(NULL == hReport)
-	{
-		return TI_NOK;
-	}
+    if (NULL == hReport) {
+        return TI_NOK;
+    }
 
     ((TReport *)hReport)->aFileEnable[module_index] = 1;
 
@@ -278,10 +275,9 @@ TI_STATUS report_SetReportModule(TI_HANDLE hReport, TI_UINT8 module_index)
 
 TI_STATUS report_ClearReportModule(TI_HANDLE hReport, TI_UINT8 module_index)
 {
-	if(NULL == hReport)
-	{
-		return TI_NOK;
-	}
+    if (NULL == hReport) {
+       return TI_NOK;
+    }
 
     ((TReport *)hReport)->aFileEnable[module_index] = 0;
 
@@ -293,14 +289,13 @@ TI_STATUS report_GetReportFilesTable(TI_HANDLE hReport, TI_UINT8 *pFiles)
 {
     TI_UINT8 index;
 
-	if( (NULL == hReport) || (NULL == pFiles))
-	{
-		return TI_NOK;
-	}
+    if ((NULL == hReport) || (NULL == pFiles)) {
+        return TI_NOK;
+    }
 
-    os_memoryCopy(((TReport *)hReport)->hOs, 
-                  (void *)pFiles, 
-                  (void *)(((TReport *)hReport)->aFileEnable), 
+    os_memoryCopy(((TReport *)hReport)->hOs,
+                  (void *)pFiles,
+                  (void *)(((TReport *)hReport)->aFileEnable),
                   sizeof(((TReport *)hReport)->aFileEnable));
 
     for (index = 0; index < sizeof(((TReport *)hReport)->aFileEnable); index++)
@@ -316,20 +311,18 @@ TI_STATUS report_SetReportFilesTable(TI_HANDLE hReport, TI_UINT8 *pFiles)
 {
     TI_UINT8 index;
 
-	if( (NULL == hReport) || (NULL == pFiles))
-	{
-		return TI_NOK;
-	}
-
+    if ((NULL == hReport) || (NULL == pFiles)) {
+        return TI_NOK;
+    }
 
     for (index = 0; index < sizeof(((TReport *)hReport)->aFileEnable); index++)
     {
         pFiles[index] -= '0';
     }
 
-    os_memoryCopy(((TReport *)hReport)->hOs, 
-                  (void *)(((TReport *)hReport)->aFileEnable), 
-                  (void *)pFiles, 
+    os_memoryCopy(((TReport *)hReport)->hOs,
+                  (void *)(((TReport *)hReport)->aFileEnable),
+                  (void *)pFiles,
                   sizeof(((TReport *)hReport)->aFileEnable));
 
     return TI_OK;
@@ -340,16 +333,13 @@ TI_STATUS report_GetReportSeverityTable(TI_HANDLE hReport, TI_UINT8 *pSeverities
 {
     TI_UINT8 index;
 
-	if( (NULL == hReport) || (NULL == pSeverities))
-	{
+    if( (NULL == hReport) || (NULL == pSeverities)) {
+        return TI_NOK;
+    }
 
-		return TI_NOK;
-	}
-
-
-    os_memoryCopy (((TReport *)hReport)->hOs, 
-                   (void *)pSeverities, 
-                   (void *)(((TReport *)hReport)->aSeverityTable), 
+    os_memoryCopy (((TReport *)hReport)->hOs,
+                   (void *)pSeverities,
+                   (void *)(((TReport *)hReport)->aSeverityTable),
                    sizeof(((TReport *)hReport)->aSeverityTable));
 
     for (index = 0; index < sizeof(((TReport *)hReport)->aSeverityTable); index++)
@@ -365,19 +355,18 @@ TI_STATUS report_SetReportSeverityTable(TI_HANDLE hReport, TI_UINT8 *pSeverities
 {
     TI_UINT8 index;
 
-	if( (NULL == hReport) || (NULL == pSeverities))
-	{
-		return TI_NOK;
-	}
+    if( (NULL == hReport) || (NULL == pSeverities)) {
+        return TI_NOK;
+    }
 
     for (index = 0; index < sizeof(((TReport *)hReport)->aSeverityTable); index++)
     {
         pSeverities[index] -= '0';
     }
 
-    os_memoryCopy(((TReport *)hReport)->hOs, 
-                  (void *)(((TReport *)hReport)->aSeverityTable), 
-                  (void *)pSeverities, 
+    os_memoryCopy(((TReport *)hReport)->hOs,
+                  (void *)(((TReport *)hReport)->aSeverityTable),
+                  (void *)pSeverities,
                   sizeof(((TReport *)hReport)->aSeverityTable));
 
     return TI_OK;
@@ -385,12 +374,11 @@ TI_STATUS report_SetReportSeverityTable(TI_HANDLE hReport, TI_UINT8 *pSeverities
 
 
 /***********************************************************************
-*                        report_setParam                                   
+*                        report_setParam
 ***********************************************************************/
 TI_STATUS report_SetParam (TI_HANDLE hReport, TReportParamInfo *pParam)
 {
-	if( (NULL == hReport) || (NULL == pParam))
-	{
+	if ((NULL == hReport) || (NULL == pParam)) {
 		return TI_NOK;
 	}
 
@@ -422,7 +410,7 @@ TI_STATUS report_SetParam (TI_HANDLE hReport, TReportParamInfo *pParam)
 
 	case REPORT_OUTPUT_TO_LOGGER_OFF:
 		os_setDebugOutputToLogger(TI_FALSE);
-        break;
+		break;
 
 	default:
 		TRACE1(hReport, REPORT_SEVERITY_ERROR, "Set param, Params is not supported, %d\n", pParam->paramType);
@@ -433,14 +421,13 @@ TI_STATUS report_SetParam (TI_HANDLE hReport, TReportParamInfo *pParam)
 }
 
 /***********************************************************************
- *                        report_getParam                                   
+ *                        report_getParam
  ***********************************************************************/
 TI_STATUS report_GetParam (TI_HANDLE hReport, TReportParamInfo *pParam)
 {
-	if( (NULL == hReport) || (NULL == pParam))
-	{
-		return TI_NOK;
-	}
+    if ((NULL == hReport) || (NULL == pParam)) {
+        return TI_NOK;
+    }
 
     switch (pParam->paramType)
     {
@@ -462,48 +449,47 @@ TI_STATUS report_GetParam (TI_HANDLE hReport, TReportParamInfo *pParam)
 
 
 /************************************************************************
- *                        report_Dump                                 *
+ *                        report_Dump
  ************************************************************************/
 TI_STATUS report_Dump (TI_UINT8 *pBuffer, char *pString, TI_UINT32 size)
 {
     TI_UINT32 index;
     TI_UINT8  temp_nibble;
-	if( (NULL == pBuffer) || (NULL == pString))
-	{
-		return TI_NOK;
-}
+    if ((NULL == pBuffer) || (NULL == pString)) {
+        return TI_NOK;
+    }
 
-    /* Go over pBuffer and convert it to chars */ 
+    /* Go over pBuffer and convert it to chars */
     for (index = 0; index < size; index++)
-{
+    {
         /* First nibble */
         temp_nibble = (pBuffer[index] & 0x0F);
         if (temp_nibble <= 9)
-	{
+        {
             pString[(index << 1) + 1] = temp_nibble + '0';
-	}
+        }
         else
-	{
+        {
             pString[(index << 1) + 1] = temp_nibble - 10 + 'A';
-	}
+        }
 
         /* Second nibble */
         temp_nibble = ((pBuffer[index] & 0xF0) >> 4);
         if (temp_nibble <= 9)
-{    
+        {
             pString[(index << 1)] = temp_nibble + '0';
-	}   
+        }
         else
-{
+        {
             pString[(index << 1)] = temp_nibble - 10 + 'A';
-	 }
-	}
+        }
+    }
 
     /* Put string terminator */
     pString[(size * 2)] = 0;
 
     return TI_OK;
-	}
+}
 
 
 /* HEX DUMP for BDs !!! Debug code only !!! */
@@ -515,14 +501,10 @@ TI_STATUS report_PrintDump (TI_UINT8 *pData, TI_UINT32 datalen)
     TI_CHAR   dbuf[50];
     static const TI_CHAR hexdigits[16] = "0123456789ABCDEF";
 
-   
-	if((NULL == pData)||(datalen <= 0)
-)
-	{
-		return TI_NOK;
-	}
+    if ((NULL == pData) || (datalen <= 0)) {
+        return TI_NOK;
+    }
 
-   
     for(j=0; j < datalen;)
     {
         /* Add a byte to the line*/
