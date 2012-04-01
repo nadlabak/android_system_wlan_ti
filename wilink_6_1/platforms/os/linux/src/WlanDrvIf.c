@@ -1050,7 +1050,7 @@ static void wlanDrvIf_Destroy (TWlanDrvIfObj *drv)
     {
         os_printf("%s: Release ipc socket...\n", __func__);
         if (drv->wl_sock->sk_socket) {
-            //sock_release (drv->wl_sock->sk_socket);
+            sock_release (drv->wl_sock->sk_socket);
         }
     }
 
@@ -1127,7 +1127,7 @@ static int __init wlanDrvIf_ModuleInit (void)
 {
     printk(KERN_INFO "TIWLAN: driver init\n");
 #ifndef CONFIG_MMC_EMBEDDED_SDIO
-    sdioDrv_init(sdc_ctrl);
+    sdioDrv_init();
 #endif
     return wlanDrvIf_Create ();
 }
