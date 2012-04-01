@@ -930,10 +930,11 @@ typedef enum
 																																* SET Bit: OFF	\n
 																																*/
 
-       POWER_MGR_SET_VOICE_POWER_POLICY                            =       SET_BIT | POWER_MANAGER_PARAM | 0x0B,                                                       /**< Power Manager Power Mode Parameter (Power Manager Module Set Command): \n */
+	POWER_MGR_DTIM_LISTEN_INTERVAL					=	GET_BIT | POWER_MANAGER_PARAM | 0x0A,
 
-       POWER_MGR_CANCEL_VOICE_POWER_POLICY                         =       SET_BIT | POWER_MANAGER_PARAM | 0x0C,                                                       /**< Power Manager Power Mode Parameter (Power Manager Module Set Command): \n */
- 
+	POWER_MGR_SET_VOICE_POWER_POLICY				=	SET_BIT | POWER_MANAGER_PARAM | 0x0B,									/**< Power Manager Power Mode Parameter (Power Manager Module Set Command): \n */
+	POWER_MGR_CANCEL_VOICE_POWER_POLICY				=	SET_BIT | POWER_MANAGER_PARAM | 0x0C,									/**< Power Manager Power Mode Parameter (Power Manager Module Set Command): \n */
+
 	/* Robust Security NW (RSN) section */
 	RSN_ENCRYPTION_STATUS_PARAM						=	SET_BIT | GET_BIT | RSN_MODULE_PARAM | 0x04,							/**< Robust Security NW (RSN) Encryption Status Parameter (RSN Module Set/Get Command): \n  
 																																* Used for setting/getting Encryption Status to/from RSN Module\n
@@ -1275,6 +1276,26 @@ typedef enum
 																									* GET Bit: ON	\n
 																									* SET Bit: ON	\n
 																									*/
+	QOS_MNGR_BA_POLICY							=	SET_BIT | GET_BIT | QOS_MANAGER_PARAM | 0x1a,	/**< QoS Manager Set BA policy Parameter (QoS Module Set/Get Command): \n  
+																									* Used for getting BA policy or setting BA policy to FW and in QoS Module\n
+																									* Done Sync with no memory allocation\n 
+																									* Parameter Number:	0x1a	\n
+																									* Module Number: QoS Module Number \n
+																									* Async Bit: OFF	\n
+																									* Allocate Bit: OFF	\n
+																									* GET Bit: ON	\n
+																									* SET Bit: ON	\n
+																									*/
+	QOS_MNGR_PS_TRAFFIC_PERIOID					= SET_BIT | GET_BIT | QOS_MANAGER_PARAM | 0x1b,	    /**< QoS Manager ps traffic Parameter (QoS Module Set/Get Command): \n  
+																									* Used for set ps traffic period for the auto rx streaming option in QoS Module\n
+																									* Done Sync with no memory allocation\n 
+																									* Parameter Number:	0x1b	\n
+																									* Module Number: QoS Module Number \n
+																									* Async Bit: OFF	\n
+																									* Allocate Bit: OFF	\n
+																									* GET Bit: ON	\n
+																									* SET Bit: ON	\n
+																									*/
 
     /* Soft Gemini params */
 	SOFT_GEMINI_SET_ENABLE						=	SET_BIT |           SOFT_GEMINI_PARAM	| 0x01,	/**< Soft Gimini Parameters Set Enable Parameter (Soft Gimini Parameters Module Set Command): \n  
@@ -1515,7 +1536,7 @@ typedef enum
 																											*/
 
 	/* Health Monitoring section */
-    HEALTH_MONITOR_CHECK_DEVICE                 =   SET_BIT |           HEALTH_MONITOR_MODULE_PARAM | 0x01,	/**< Health Monitoring Check Device Parameter (Health Monitoring Module Set Command): \n  
+    HEALTH_MONITOR_CHECK_DEVICE					=	SET_BIT |           HEALTH_MONITOR_MODULE_PARAM | 0x01,	/**< Health Monitoring Check Device Parameter (Health Monitoring Module Set Command): \n  
 																											* Used for sending health check command to FW\n
 																											* Done Sync with no memory allocation\n 
 																											* Parameter Number:	0x01	\n
@@ -1527,28 +1548,39 @@ typedef enum
 																											*/
 
 	/* TWD CoexActivity table */
-    TWD_COEX_ACTIVITY_PARAM                			=   SET_BIT | TWD_MODULE_PARAM | TWD_COEX_ACTIVITY_PARAM_ID,		/**< TWD Control CoexActivity Parameter (TWD Control Module Set/Get Command): \n  
-																																* Used for getting RTS Threshold from TWD Control Module or setting RTS Threshold to FW and TWD Control Module\n
-																																* Done Sync with no memory allocation\n 
-																																* Parameter Number:	TWD_COEX_ACTIVITY_PARAM_ID	\n
-																																* Module Number: TWD Control Module Number \n
-																																* Async Bit: OFF	\n
-																																* Allocate Bit: OFF	\n
-																																* GET Bit: OFF	\n
-																																* SET Bit: ON	\n
-																																*/
+    TWD_COEX_ACTIVITY_PARAM						=	SET_BIT | TWD_MODULE_PARAM | TWD_COEX_ACTIVITY_PARAM_ID,	/**< TWD Control CoexActivity Parameter (TWD Control Module Set/Get Command): \n  
+																												* Used for getting RTS Threshold from TWD Control Module or setting RTS Threshold to FW and TWD Control Module\n
+																												* Done Sync with no memory allocation\n 
+																												* Parameter Number:	TWD_COEX_ACTIVITY_PARAM_ID	\n
+																												* Module Number: TWD Control Module Number \n
+																												* Async Bit: OFF	\n
+																												* Allocate Bit: OFF	\n
+																												* GET Bit: OFF	\n
+																												* SET Bit: ON	\n
+																												*/
 
-    /* CurrBss Section */
-    CURR_BSS_REGISTER_LINK_QUALITY_EVENT_PARAM     =   SET_BIT | CURR_BSS_MODULE_PARAM | 0x01,	 /**< CurrBss User Defined Trigger Parameter (Roaming Manager Module Set Command): \n  
-                                                                                                    * Used for setting user-defined trigger to FW\n
-                                                                                                    * Done Sync with no memory allocation\n 
-                                                                                                    * Parameter Number:	0x01	\n
-                                                                                                    * Module Number: Curr Bss Module Number \n
-                                                                                                    * Async Bit: OFF	\n
-                                                                                                    * Allocate Bit: OFF	\n
-                                                                                                    * GET Bit: OFF	\n
-                                                                                                    * SET Bit: ON	\n
-                                                                                                    */
+	/* CurrBss Section */
+	CURR_BSS_REGISTER_LINK_QUALITY_EVENT_PARAM	=	SET_BIT | CURR_BSS_MODULE_PARAM | 0x01,						/**< CurrBss User Defined Trigger Parameter (Roaming Manager Module Set Command): \n  
+																												* Used for setting user-defined trigger to FW\n
+																												* Done Sync with no memory allocation\n 
+																												* Parameter Number:	0x01	\n
+																												* Module Number: Curr Bss Module Number \n
+																												* Async Bit: OFF	\n
+																												* Allocate Bit: OFF	\n
+																												* GET Bit: OFF	\n
+																												* SET Bit: ON	\n
+																												*/
+
+	FW_DEBUG_SDIO_VALIDATION					=	SET_BIT | TWD_MODULE_PARAM | TWD_SDIO_VALIDATION_PARAMS_ID,	/**< SDIO validation mechanism: \n  
+																												 * Used for testing SDIO lines\n
+																												 * Done Sync with no memory allocation\n
+																												 * Parameter Number:	TWD_SDIO_VALIDATION_PARAMS_ID   \n
+																												 * Module Number: TWD Control Module Number \n
+																												 * Async Bit: OFF	\n
+																												 * Allocate Bit: OFF	\n
+																												 * GET Bit: OFF	\n
+																												 * SET Bit: ON	\n
+																												 */
 
 	LAST_CMD									=	0x00	/**< Last External Parameter - Dummy, Should always stay Last	*/													
 

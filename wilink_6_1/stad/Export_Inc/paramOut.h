@@ -812,10 +812,11 @@ typedef struct{
 		/* debug */
 		TDebugRegisterReq					HwRegister;
         RateMangeParams_t                   RateMng;
-        RateMangeReadParams_t               RateMngParams; 
+        RateMangeReadParams_t               RateMngParams;
+
+        TI_UINT8 dtimListenInterval;
 
         TIpAddr    StationIP;
-        
     } content;
 }paramInfo_t;
 

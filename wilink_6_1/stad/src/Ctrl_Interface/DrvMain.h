@@ -59,4 +59,7 @@ TI_STATUS drvMain_InsertAction      (TI_HANDLE  hDrvMain, EActionType eAction);
 TI_STATUS drvMain_Recovery          (TI_HANDLE  hDrvMain);
 void      drvMain_SmeStop           (TI_HANDLE hDrvMain);
 
+TI_UINT8 drvMain_GetDtimListenInterval(TI_HANDLE hDrvMain);
+TI_UINT8 drvMain_GetBeaconInterval(TI_HANDLE hDrvMain);
+
 #endif

@@ -628,9 +628,9 @@ typedef enum
 /*	0x26	*/	TWD_COEX_ACTIVITY_PARAM_ID,	    				/**< */
 /*	0x27	*/	TWD_FM_COEX_PARAM_ID,	    				    /**< */
 /*	0x28	*/	TWD_DCO_ITRIM_PARAMS_ID,    				    /**< */
-
-				/* must be last!!! */
-/*	0x29    */	TWD_LAST_PARAM_ID								/**< */
+/*	0x29	*/	TWD_SDIO_VALIDATION_PARAMS_ID,				/**< */
+/* must be last!!! */
+/*	0x30	*/	TWD_LAST_PARAM_ID					/**< */
 } ETwdParam;
 
 /** \enum ETwdCallbackOwner

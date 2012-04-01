@@ -21,9 +21,6 @@
     export ARCH=arm
     export CROSS_COMPILE=arm-eabi-
     export TARGET_OUT_INTERMEDIATES=out
-    export JAVA_HOME=/usr/lib/jvm/java-6-sun
-    export BOARD_USES_QCOM_HARDWARE=true
-    export PATH=$PLATFORM_DIR/prebuilt/linux-x86/toolchain/arm-eabi-4.2.1/bin:$JAVA_HOME/bin:$PATH
 
     cd $PLATFORM_DIR
     . build/envsetup.sh
@@ -40,3 +37,11 @@ cp system/wlan/ti/wilink_6_1/platforms/os/linux/tiwlan_drv.ko ./
 
 make MOTO_PREBUILT_DIR= tiap_drv
 cp system/wlan/ti/WiLink_AP/platforms/os/linux/tiap_drv.ko ./
+
+
+# Last changes :
+
+Apr 2012 :
+- added implementation of CONFIG_HAS_EARLYSUSPEND,  DTIM skipping feature
+- Fix Tests frame size warnings
+

@@ -187,6 +187,7 @@ void PowerMgr_init (TStadHandlesList *pStadHandles)
     pPowerMgr->hTWD             = pStadHandles->hTWD;
     pPowerMgr->hSoftGemini      = pStadHandles->hSoftGemini;
     pPowerMgr->hTimer           = pStadHandles->hTimer;
+    //pPowerMgr->hQosMngr       = pStadHandles->hQosMngr; /* added in 6.1 144 */
     pPowerMgr->psEnable         = TI_FALSE;
 
     /* initialize the power manager keep-alive sub module */
@@ -328,7 +329,7 @@ TI_STATUS PowerMgr_SetDefaults (TI_HANDLE hPowerMgr, PowerMgrInitParams_t* pPowe
     pPowerMgr->powerMngModePriority[POWER_MANAGER_USER_PRIORITY].priorityEnable = TI_TRUE;
 
     if (pPowerMgr->reAuthActivePriority)
-		pPowerMgr->powerMngModePriority[POWER_MANAGER_REAUTH_PRIORITY].powerMode = POWER_MODE_ACTIVE;
+        pPowerMgr->powerMngModePriority[POWER_MANAGER_REAUTH_PRIORITY].powerMode = POWER_MODE_ACTIVE;
 
     /* set the defualt power policy */
     TWD_CfgSleepAuth (pPowerMgr->hTWD, pPowerMgr->defaultPowerLevel);
@@ -341,14 +342,14 @@ TI_STATUS PowerMgr_SetDefaults (TI_HANDLE hPowerMgr, PowerMgrInitParams_t* pPowe
 
     if ( (pPowerMgr->hPsPollFailureTimer == NULL) || (pPowerMgr->hRetryPsTimer == NULL))
     {
-TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INIT, "PowerMgr_SetDefaults - ERROR creating timers - ABROTING init!\n");
+        TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INIT, "PowerMgr_SetDefaults - ERROR creating timers - ABROTING init!\n");
         return TI_NOK;
     }
 
     /* Register and Enable the PsPoll failure */
     TWD_RegisterEvent (pPowerMgr->hTWD,
         TWD_OWN_EVENT_PSPOLL_DELIVERY_FAILURE,
-        (void *)PowerMgr_PsPollFailureCB, 
+        (void *)PowerMgr_PsPollFailureCB,
         hPowerMgr);
     TWD_EnableEvent (pPowerMgr->hTWD, TWD_OWN_EVENT_PSPOLL_DELIVERY_FAILURE);
 
@@ -373,9 +374,9 @@ RETURN:    TI_STATUS - TI_OK or PENDING on success else TI_NOK.\n
 TI_STATUS PowerMgr_startPS(TI_HANDLE hPowerMgr)
 {
     PowerMgr_t *pPowerMgr = (PowerMgr_t*)hPowerMgr;
-	int frameCount;
+    int frameCount;
 
-    
+
     TRACE0(pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "PowerMgr_startPS - called\n");
 
     if ( pPowerMgr->psEnable == TI_TRUE )
@@ -402,41 +403,38 @@ TI_STATUS PowerMgr_startPS(TI_HANDLE hPowerMgr)
     */
     pPowerMgr->desiredPowerModeProfile = powerMgrGetHighestPriority(hPowerMgr);
 
-    if ( pPowerMgr->desiredPowerModeProfile == POWER_MODE_AUTO )
+    if ( pPowerMgr->desiredPowerModeProfile != POWER_MODE_ACTIVE)
     {
         powerMgrStartAutoPowerMode(hPowerMgr);
     }
-    else /*not auto mode - according to the current profle*/
+    if ( pPowerMgr->desiredPowerModeProfile != POWER_MODE_AUTO) /*not auto mode - according to the current profle*/
     {
         powerMgrPowerProfileConfiguration(hPowerMgr, pPowerMgr->desiredPowerModeProfile);
     }
 
     TWD_CfgSleepAuth (pPowerMgr->hTWD, pPowerMgr->PowerSavePowerLevel);
 
-   if ((pPowerMgr->betEnable)&&( pPowerMgr->desiredPowerModeProfile != POWER_MODE_ACTIVE ))
-   {
-		TrafficMonitor_StartEventNotif(pPowerMgr->hTrafficMonitor,
-									   pPowerMgr->betEnableTMEvent);
+    if ((pPowerMgr->betEnable)&&( pPowerMgr->desiredPowerModeProfile != POWER_MODE_ACTIVE ))
+    {
+        TrafficMonitor_StartEventNotif(pPowerMgr->hTrafficMonitor,
+                                      pPowerMgr->betEnableTMEvent);
 
-		TrafficMonitor_StartEventNotif(pPowerMgr->hTrafficMonitor,
-									   pPowerMgr->betDisableTMEvent);
+        TrafficMonitor_StartEventNotif(pPowerMgr->hTrafficMonitor,
+                                      pPowerMgr->betDisableTMEvent);
 
-	
-		frameCount = TrafficMonitor_GetFrameBandwidth(pPowerMgr->hTrafficMonitor);
-	
-		if (frameCount < pPowerMgr->BetEnableThreshold) 
-		{
+        frameCount = TrafficMonitor_GetFrameBandwidth(pPowerMgr->hTrafficMonitor);
+        if (frameCount < pPowerMgr->BetEnableThreshold)
+        {
             pPowerMgr->betTrafficEnable = TI_TRUE;
-            
-		}
-		else if (frameCount > pPowerMgr->BetDisableThreshold) 
-		{
-			pPowerMgr->betTrafficEnable = TI_FALSE;
+
         }
-       
-		PowerMgrConfigBetToFw(hPowerMgr,pPowerMgr->betTrafficEnable);
-	}
-    
+        else if (frameCount > pPowerMgr->BetDisableThreshold)
+        {
+            pPowerMgr->betTrafficEnable = TI_FALSE;
+        }
+        PowerMgrConfigBetToFw(hPowerMgr,pPowerMgr->betTrafficEnable);
+    }
+
     /* also start the power manager keep-alive sub module */
     powerMgrKL_start (pPowerMgr->hPowerMgrKeepAlive);
 
@@ -445,13 +443,13 @@ TI_STATUS PowerMgr_startPS(TI_HANDLE hPowerMgr)
 
 
 /****************************************************************************************
- *                        PowerMgr_stopPS                                                           *
+ *                        PowerMgr_stopPS                                               *
  ****************************************************************************************
 DESCRIPTION: Stop the power save algorithm of the driver and also the 802.11 PS.
-                                                                                                                               
+
 INPUT:          - hPowerMgr             - Handle to the Power Manager
 
-OUTPUT:     
+OUTPUT:
 RETURN:    TI_STATUS - TI_OK or PENDING on success else TI_NOK.\n
 ****************************************************************************************/
 TI_STATUS PowerMgr_stopPS(TI_HANDLE hPowerMgr, TI_BOOL bDisconnect)
@@ -483,25 +481,30 @@ TI_STATUS PowerMgr_stopPS(TI_HANDLE hPowerMgr, TI_BOOL bDisconnect)
         powerMgr_PsPollFailureTimeout( hPowerMgr, TI_FALSE );
     }
 
-    if ( pPowerMgr->desiredPowerModeProfile == POWER_MODE_AUTO )
+    if ( pPowerMgr->desiredPowerModeProfile != POWER_MODE_ACTIVE)
     {
         powerMgrDisableThresholdsIndications(hPowerMgr);
     }
 
+    /*stop rx auto streaming*/
+    if ( pPowerMgr->desiredPowerModeProfile != POWER_MODE_ACTIVE && pPowerMgr->desiredPowerModeProfile != POWER_MODE_AUTO)
+    {
+        //qosMngr_UpdatePsTraffic(pPowerMgr->hQosMngr,TI_FALSE);
+    }
     TWD_SetPsMode (pPowerMgr->hTWD, POWER_SAVE_OFF, TI_FALSE, NULL, NULL, NULL);
 
     /* set the power policy of the system */
     TWD_CfgSleepAuth (pPowerMgr->hTWD, pPowerMgr->defaultPowerLevel);
     if ((pPowerMgr->betEnable)&&( pPowerMgr->desiredPowerModeProfile != POWER_MODE_ACTIVE ))
-	{
-		TrafficMonitor_StopEventNotif(pPowerMgr->hTrafficMonitor,
-									  pPowerMgr->betEnableTMEvent);
+    {
+        TrafficMonitor_StopEventNotif(pPowerMgr->hTrafficMonitor,
+                                      pPowerMgr->betEnableTMEvent);
 
-		TrafficMonitor_StopEventNotif(pPowerMgr->hTrafficMonitor,
-									  pPowerMgr->betDisableTMEvent);
-	}
+        TrafficMonitor_StopEventNotif(pPowerMgr->hTrafficMonitor,
+                                      pPowerMgr->betDisableTMEvent);
+    }
 
-   /* also stop the power manager keep-alive sub module */
+    /* also stop the power manager keep-alive sub module */
     powerMgrKL_stop (pPowerMgr->hPowerMgrKeepAlive, bDisconnect);
 
     return TI_OK;
@@ -512,7 +515,7 @@ TI_STATUS PowerMgr_stopPS(TI_HANDLE hPowerMgr, TI_BOOL bDisconnect)
  *                        PowerMgr_getPsStatus                                                          *
  ****************************************************************************************
 DESCRIPTION: returns the 802.11 power save status (enable / disable).
-                                                                                                                               
+
 INPUT:          - hPowerMgr             - Handle to the Power Manager
 
 OUTPUT:     
@@ -559,6 +562,15 @@ TI_STATUS PowerMgr_setPowerMode(TI_HANDLE hPowerMgr)
         previousPowerModeProfile = pPowerMgr->desiredPowerModeProfile;
         pPowerMgr->desiredPowerModeProfile = powerMode;
 
+        /* Disable the auto rx streaming mechanism in case we move from ps state*/
+        if (pPowerMgr->desiredPowerModeProfile == POWER_MODE_ACTIVE || pPowerMgr->desiredPowerModeProfile == POWER_MODE_AUTO)
+        {
+            //qosMngr_UpdatePsTraffic(pPowerMgr->hQosMngr,TI_FALSE);
+        }
+        if (previousPowerModeProfile != POWER_MODE_ACTIVE)
+        {
+            powerMgrDisableThresholdsIndications(hPowerMgr);
+        }
         if ( pPowerMgr->desiredPowerModeProfile == POWER_MODE_AUTO )
         {
             if ( pPowerMgr->psEnable == TI_TRUE )
@@ -572,16 +584,14 @@ TI_STATUS PowerMgr_setPowerMode(TI_HANDLE hPowerMgr)
             */
             return TI_OK;
         }
-        else if ( previousPowerModeProfile == POWER_MODE_AUTO )
-        {
-            /*
-            if the old power mode is AUTO and the new power mode is NOT then need
-            to disable the thresholds indications from the traffic monitor.
-            */
-            powerMgrDisableThresholdsIndications(hPowerMgr);
-        }
+
         if ( pPowerMgr->psEnable == TI_TRUE )
         {
+            if (pPowerMgr->desiredPowerModeProfile != POWER_MODE_ACTIVE)
+            {
+                /*active the performance monitor thresholds indication for auto rx streaming*/
+                powerMgrStartAutoPowerMode(hPowerMgr);
+            }
             powerMgrPowerProfileConfiguration(hPowerMgr, powerMode);
         }
     }
@@ -600,11 +610,12 @@ TI_STATUS PowerMgr_setPowerMode(TI_HANDLE hPowerMgr)
 /****************************************************************************************
  *                        PowerMgr_setDozeModeInAuto                                    *
  ****************************************************************************************
-DESCRIPTION: Configure the doze mode (short-doze / long-doze) that auto mode will toggle between doze vs active.                                                                                        
+DESCRIPTION: Configure the doze mode (short-doze / long-doze) that auto mode will toggle between doze vs active.
+
 INPUT:      - hPowerMgr             - Handle to the Power Manager
             - dozeMode      - the requested doze mode when Mgr is in Auto mode (short-doze / long-doze)
-OUTPUT:     
-RETURN:   
+OUTPUT:
+RETURN:
 ****************************************************************************************/
 void PowerMgr_setDozeModeInAuto(TI_HANDLE hPowerMgr, PowerMgr_PowerMode_e dozeMode)
 {
@@ -625,22 +636,22 @@ void PowerMgr_setDozeModeInAuto(TI_HANDLE hPowerMgr, PowerMgr_PowerMode_e dozeMo
             {
                 if ( pPowerMgr->beaconListenInterval > 1 )
                 {
-                    powerMgrSendMBXWakeUpConditions(hPowerMgr,pPowerMgr->beaconListenInterval,TNET_WAKE_ON_N_BEACON);       
+                    powerMgrSendMBXWakeUpConditions(hPowerMgr,pPowerMgr->beaconListenInterval,TNET_WAKE_ON_N_BEACON);
                 }
                 else
                 {
-                    powerMgrSendMBXWakeUpConditions(hPowerMgr,pPowerMgr->beaconListenInterval,TNET_WAKE_ON_BEACON);     
+                    powerMgrSendMBXWakeUpConditions(hPowerMgr,pPowerMgr->beaconListenInterval,TNET_WAKE_ON_BEACON);
                 }
             }
             else  /* POWER_MODE_LONG_DOZE */
             {
                 if ( pPowerMgr->dtimListenInterval > 1 )
                 {
-                    powerMgrSendMBXWakeUpConditions(hPowerMgr,pPowerMgr->dtimListenInterval,TNET_WAKE_ON_N_DTIM);       
+                    powerMgrSendMBXWakeUpConditions(hPowerMgr,pPowerMgr->dtimListenInterval,TNET_WAKE_ON_N_DTIM);
                 }
                 else
                 {
-                    powerMgrSendMBXWakeUpConditions(hPowerMgr,pPowerMgr->dtimListenInterval,TNET_WAKE_ON_DTIM);     
+                    powerMgrSendMBXWakeUpConditions(hPowerMgr,pPowerMgr->dtimListenInterval,TNET_WAKE_ON_DTIM);
                 }
             }
 
@@ -654,12 +665,12 @@ void PowerMgr_setDozeModeInAuto(TI_HANDLE hPowerMgr, PowerMgr_PowerMode_e dozeMo
 }
 
 /****************************************************************************************
- *                        PowerMgr_getPowerMode                                                         *
+ *                        PowerMgr_getPowerMode                                         *
  ****************************************************************************************
-DESCRIPTION: Get the current PowerMode of the PowerMgr module. 
-                                                                                                                               
+DESCRIPTION: Get the current PowerMode of the PowerMgr module.
+
 INPUT:          - hPowerMgr             - Handle to the Power Manager
-OUTPUT:     
+OUTPUT:
 RETURN:    PowerMgr_PowerMode_e - (auto / active / short doze / long doze).\n
 ****************************************************************************************/
 PowerMgr_PowerMode_e PowerMgr_getPowerMode(TI_HANDLE hPowerMgr)
@@ -677,6 +688,14 @@ TI_STATUS powerMgr_setParam(TI_HANDLE thePowerMgrHandle,
 
     switch ( theParamP->paramType )
     {
+    case POWER_MGR_DTIM_LISTEN_INTERVAL:
+        pPowerMgr->dtimListenInterval = theParamP->content.dtimListenInterval;
+        if (pPowerMgr->dtimListenInterval > 1)
+            powerMgrSendMBXWakeUpConditions(thePowerMgrHandle,pPowerMgr->dtimListenInterval,TNET_WAKE_ON_N_DTIM);
+        else
+            powerMgrSendMBXWakeUpConditions(thePowerMgrHandle,pPowerMgr->dtimListenInterval,TNET_WAKE_ON_DTIM);
+        break;
+
     case POWER_MGR_POWER_MODE:
         pPowerMgr->powerMngModePriority[theParamP->content.powerMngPowerMode.PowerMngPriority].powerMode
                         = theParamP->content.powerMngPowerMode.PowerMode;
@@ -698,19 +717,19 @@ TI_STATUS powerMgr_setParam(TI_HANDLE thePowerMgrHandle,
     case POWER_MGR_POWER_LEVEL_PS:
         pPowerMgr->PowerSavePowerLevel = theParamP->content.PowerSavePowerLevel;
         /* If we are connected, config the new power level (this param is for connected state) */
-		if (pPowerMgr->psEnable)
+        if (pPowerMgr->psEnable)
         {
-			TWD_CfgSleepAuth (pPowerMgr->hTWD, pPowerMgr->PowerSavePowerLevel);
-		}
+            TWD_CfgSleepAuth (pPowerMgr->hTWD, pPowerMgr->PowerSavePowerLevel);
+        }
         break;
 
     case POWER_MGR_POWER_LEVEL_DEFAULT:
         pPowerMgr->defaultPowerLevel = theParamP->content.DefaultPowerLevel;
         /* If we are NOT connected, config the new power level (this param is for disconnected state) */
-		if (!pPowerMgr->psEnable)
-		{	
-			TWD_CfgSleepAuth (pPowerMgr->hTWD, pPowerMgr->defaultPowerLevel);
-		}
+        if (!pPowerMgr->psEnable)
+        {
+            TWD_CfgSleepAuth (pPowerMgr->hTWD, pPowerMgr->defaultPowerLevel);
+        }
         break;
 
     case POWER_MGR_POWER_LEVEL_DOZE_MODE:
@@ -722,17 +741,19 @@ TI_STATUS powerMgr_setParam(TI_HANDLE thePowerMgrHandle,
     case POWER_MGR_KEEP_ALIVE_ENA_DIS:
     case POWER_MGR_KEEP_ALIVE_ADD_REM:
         return powerMgrKL_setParam (pPowerMgr->hPowerMgrKeepAlive, theParamP);
-    
+
+/* FIXME: Added in 6.1 144
     case POWER_MGR_SET_VOICE_POWER_POLICY:
         pPowerMgr->powerMngModePriority[POWER_MANAGER_VOIP_PRIORITY].powerMode = POWER_MODE_SHORT_DOZE;
         pPowerMgr->powerMngModePriority[POWER_MANAGER_VOIP_PRIORITY].priorityEnable = TI_TRUE;
         PowerMgr_setPowerMode(thePowerMgrHandle);
         break;
- 
+
     case POWER_MGR_CANCEL_VOICE_POWER_POLICY:
         pPowerMgr->powerMngModePriority[POWER_MANAGER_VOIP_PRIORITY].priorityEnable = TI_FALSE;
         PowerMgr_setPowerMode(thePowerMgrHandle);
         break;
+*/
 
     default:
         TRACE1(pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "PowerMgr_setParam - ERROR - Param is not supported, %d\n\n", theParamP->paramType);
@@ -752,6 +773,10 @@ TI_STATUS powerMgr_getParam(TI_HANDLE thePowerMgrHandle,
 
     switch ( theParamP->paramType )
     {
+    case POWER_MGR_DTIM_LISTEN_INTERVAL:
+        theParamP->content.dtimListenInterval = pPowerMgr->dtimListenInterval;
+        break;
+
     case POWER_MGR_POWER_MODE:
         theParamP->content.PowerMode = PowerMgr_getPowerMode(thePowerMgrHandle);
         break;
@@ -770,19 +795,13 @@ TI_STATUS powerMgr_getParam(TI_HANDLE thePowerMgrHandle,
 
     case POWER_MGR_KEEP_ALIVE_GET_CONFIG:
         return powerMgrKL_getParam (pPowerMgr->hPowerMgrKeepAlive, theParamP);
-    
+
 
     case POWER_MGR_GET_POWER_CONSUMPTION_STATISTICS:
-       
        return cmdBld_ItrPowerConsumptionstat (pPowerMgr->hTWD,
-                             theParamP->content.interogateCmdCBParams.fCb, 
+                             theParamP->content.interogateCmdCBParams.fCb,
                              theParamP->content.interogateCmdCBParams.hCb,
                              (void*)theParamP->content.interogateCmdCBParams.pCb);
-
-
-
-            
-
 
     default:
         TRACE1(pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "PowerMgr_getParam - ERROR - Param is not supported, %d\n\n", theParamP->paramType);
@@ -799,15 +818,15 @@ TI_STATUS powerMgr_getParam(TI_HANDLE thePowerMgrHandle,
 
 
 /****************************************************************************************
- *                        powerSaveCompleteCB                                                       *
+ *                        powerSaveCompleteCB                                           *
  ****************************************************************************************
-DESCRIPTION: Callback for the Power server complete - gets the result of the request 
+DESCRIPTION: Callback for the Power server complete - gets the result of the request
               for PS or exit PS.
-                                                                                                                               
-INPUT:          - hPowerMgr             - Handle to the Power Manager
+
+INPUT:      - hPowerMgr             - Handle to the Power Manager
             - PSMode
             - trasStatus            - result string form the FW.
-OUTPUT:     
+OUTPUT:
 RETURN:    void.\n
 ****************************************************************************************/
 static void powerSaveCompleteCB(TI_HANDLE hPowerMgr,TI_UINT8 PSMode,TI_UINT8 transStatus)
@@ -821,7 +840,7 @@ static void powerSaveCompleteCB(TI_HANDLE hPowerMgr,TI_UINT8 PSMode,TI_UINT8 tra
     {
     case ENTER_POWER_SAVE_FAIL:
     case EXIT_POWER_SAVE_FAIL:
-        pPowerMgr->lastPsTransaction = transStatus;
+        pPowerMgr->lastPsTransaction = (EventsPowerSave_e)transStatus;
         tmr_StartTimer (pPowerMgr->hRetryPsTimer,
                         powerMgrRetryPsTimeout,
                         (TI_HANDLE)pPowerMgr,
@@ -872,6 +891,11 @@ static void PowerMgrTMThresholdCrossCB( TI_HANDLE hPowerMgr, TI_UINT32 cookie )
             TRACE1( pPowerMgr->hReport, REPORT_SEVERITY_ERROR, "PowerMgrTMThresholdCrossCB: TM notification with invalid cookie: %d!\n", cookie);
             break;
         }
+    }
+    else if ((pPowerMgr->psEnable == TI_TRUE) && (pPowerMgr->desiredPowerModeProfile != POWER_MODE_ACTIVE))
+    {
+        //TI_BOOL bPsTrafficOn = ((PowerMgr_PowerMode_e)cookie == POWER_MODE_ACTIVE) ? TI_TRUE : TI_FALSE;
+        //qosMngr_UpdatePsTraffic(pPowerMgr->hQosMngr,bPsTrafficOn);
     }
     else
     {
@@ -958,14 +982,30 @@ static void powerMgrStartAutoPowerMode(TI_HANDLE hPowerMgr)
     TRACE0( pPowerMgr->hReport, REPORT_SEVERITY_INFORMATION, "powerMgrStartAutoPowerMode: Starting auto power mode,");
 
     /*Activates the correct profile*/
-    if ( frameCount >= pPowerMgr->autoModeActiveTH )
+    /*Activate the active profile just in case frame count bigger than active TH and bigger than 0*/
+    if ( frameCount >= pPowerMgr->autoModeActiveTH && frameCount > 0)
     {
-        powerMgrPowerProfileConfiguration(hPowerMgr, POWER_MODE_ACTIVE);
+        if (pPowerMgr->desiredPowerModeProfile == POWER_MODE_AUTO)
+        {
+            powerMgrPowerProfileConfiguration(hPowerMgr, POWER_MODE_ACTIVE);
+        }
+        else if(pPowerMgr->desiredPowerModeProfile != POWER_MODE_ACTIVE)
+        {
+            /*In power save mode inform the qos manager that auto rx streaming can be activated*/
+            //qosMngr_UpdatePsTraffic(pPowerMgr->hQosMngr,TI_TRUE);
+        }
     }
     else
     {
-        powerMgrPowerProfileConfiguration(hPowerMgr, pPowerMgr->autoModeDozeMode);
-
+        if (pPowerMgr->desiredPowerModeProfile == POWER_MODE_AUTO)
+        {
+            powerMgrPowerProfileConfiguration(hPowerMgr, pPowerMgr->autoModeDozeMode);
+        }
+        else if(pPowerMgr->desiredPowerModeProfile != POWER_MODE_ACTIVE)
+        {
+            /*In power save mode inform the qos manager that auto rx streaming should be deactivated*/
+            //qosMngr_UpdatePsTraffic(pPowerMgr->hQosMngr,TI_FALSE);
+        }
     }
     /* Activates the Trafic monitoe Events*/        
     powerMgrEnableThresholdsIndications(hPowerMgr);

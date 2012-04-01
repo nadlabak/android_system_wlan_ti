@@ -147,7 +147,7 @@ typedef struct
     TI_UINT8                    dtimListenInterval;             /**< specify how often the TNET wakes up to listen to
                                                                  * dtim frames. the value is expressed in units of
                                                                  * "dtim interval".
-                                                                 */                                                                          
+                                                                 */
     EPowerPolicy    			defaultPowerLevel;              /**< Power level when PS not active */
     EPowerPolicy    			PowerSavePowerLevel;            /**< Power level when PS active */
     EventsPowerSave_e           lastPsTransaction;              /**< Last result of PS request */
