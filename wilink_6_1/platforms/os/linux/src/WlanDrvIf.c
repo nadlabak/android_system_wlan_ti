@@ -83,8 +83,8 @@ static TWlanDrvIfObj *pDrvStaticHandle;
 
 #define OS_SPECIFIC_RAM_ALLOC_LIMIT			(0xFFFFFFFF)	/* assume OS never reach that limit */
 
-
 MODULE_DESCRIPTION("TI WLAN Embedded Station Driver");
+MODULE_AUTHOR("Texas Instruments Inc");
 MODULE_LICENSE("GPL");
 
 #if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 31))
@@ -1011,7 +1011,10 @@ static void wlanDrvIf_Destroy (TWlanDrvIfObj *drv)
     /* close the ipc_kernel socket*/
     if (drv && drv->wl_sock) 
     {
-        sock_release (drv->wl_sock->sk_socket);
+        os_printf("%s: Release ipc socket...\n", __func__);
+        if (drv->wl_sock->sk_socket) {
+            //sock_release (drv->wl_sock->sk_socket);
+        }
     }
 
     /* Release the driver interrupt (or polling timer) */

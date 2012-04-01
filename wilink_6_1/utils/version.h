@@ -31,27 +31,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-                                                                                                             
-/**************************************************************************/                                                                                                             
-/*                                                                        */                                                                                                             
-/*   MODULE:  version.h                                                   */                                                                                                             
-/*   PURPOSE: release specific definitions file.                          */                                                                                                             
-/*                                                                        */                                                                                                             
-/**************************************************************************/                                                                                                             
-                                                                                                             
-                                                                                                             
-#ifndef _VERSION_H_                                                                                                             
-#define _VERSION_H_                                                                                                             
+/**************************************************************************/
+/*                                                                        */
+/*   MODULE:  version.h                                                   */
+/*   PURPOSE: release specific definitions file.                          */
+/*                                                                        */
+/**************************************************************************/
 
-#define SW_VERSION_STR      "WiLink_Driver_6.1.0.0.131f"
+#ifndef _VERSION_H_
+#define _VERSION_H_
 
-#define SW_RELEASE_MONTH    03
-#define SW_RELEASE_DAY      21
-#define SW_RELEASE_YEAR     2010
+#define SW_VERSION_STR      "WiLink_Driver_6.1.0.0.131h"
 
-
-
+#define SW_RELEASE_MONTH    04
+#define SW_RELEASE_DAY      01
+#define SW_RELEASE_YEAR     2012
 
 #endif /* _VERSION_H_ */
-                                                                                                       
 

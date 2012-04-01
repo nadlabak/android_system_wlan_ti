@@ -161,7 +161,12 @@ TI_STATUS scanCncnApp_SetParam (TI_HANDLE hScanCncn, paramInfo_t *pParam)
         if (SCAN_SCC_NO_CLIENT != pScanCncn->eCurrentRunningAppScanClient)
         {
             TRACE1(pScanCncn->hReport, REPORT_SEVERITY_ERROR , "scanCncnApp_SetParam: received OS scan request when client %d is currently running!\n", pScanCncn->eCurrentRunningAppScanClient);
-            return TI_NOK;
+            // BEGIN Motorola, dpn473, 03-03-2011, IKSTABLEFOUR-7529, PNO driver HUNG fix
+            if (pScanCncn->eCurrentRunningAppScanClient == SCAN_SCC_APP_PERIODIC)
+                return TI_OK;
+            else
+                return TI_NOK;
+            // END IKSTABLEFOUR-7529
         }
 
         /* set one-shot scan as running app scan client */
